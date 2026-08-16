@@ -1,0 +1,22 @@
+{
+  "name": "booking_project",
+  "version": "1.0.0",
+  "description": "I learn about database in this project",
+  "license": "ISC",
+  "author": "John P",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run --no-file-parallelism",
+    "migrate": "node-pg-migrate --migrations-dir src/database/migrations"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "vitest": "^4.1.10"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^9.0.0"
+  }
+}
