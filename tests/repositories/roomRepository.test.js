@@ -30,7 +30,12 @@ async function createTestRoom(name = "Room 1", price_per_night = 200) {
     [name, price_per_night],
   );
 
-  return result.rows[0];
+  const room = result.rows[0]
+  return {
+    id: room.id,
+    name: room.name,
+    pricePerNight: room.price_per_night
+  }
 }
 
 describe('RoomRepository [findById]', () => {
@@ -72,17 +77,10 @@ describe('RoomRepository [createRoom]', () => {
     const newRoomReturned = await roomRepository.createRoom(testRoomInfo)
 
     // Assert
-    expect(newRoom).toEqual(expect.objectContaining(testRoomInfo))
+    expect(newRoomReturned).toEqual(expect.objectContaining(testRoomInfo))
     // Assert side effect
-    const resultRoomInDb = query(
-      `
-      SELECT id, name, price_per_night, created_at FROM rooms
-      WHERE id=$1
-      `,
-      [newRoom.id]
-    )
-    const newRoomInDb = resultRoomIbDb.rows?.[0]
-    expect(newRoomIbDb).toEqual(newRoom)
+    const newRoomInDb = await roomRepository.findById(newRoomReturned.id)
+    expect(newRoomInDb).toEqual(newRoomReturned)
   })
 
   it('doesnot create and raises AppError when given duplicated name', async () => {
@@ -90,10 +88,10 @@ describe('RoomRepository [createRoom]', () => {
     const roomRepository = new RoomRepository(query)
     const duplicatedName = 'My Room'
     const pricePerNight = 100
-    const testRoom = new createTestRoom(duplicatedName)
+    const testRoom = await createTestRoom(duplicatedName)
 
     //Act
-    const roomPromise = roomRepository.create({ 
+    const roomPromise = roomRepository.createRoom({ 
       name: duplicatedName,
       pricePerNight: pricePerNight
      })
