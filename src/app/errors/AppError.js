@@ -6,3 +6,7 @@ export default class AppError extends Error {
   }
 }
 
+export function createAppError(error) {
+  return new AppError(error.message, error.statusCode, error.code)
+}
+
