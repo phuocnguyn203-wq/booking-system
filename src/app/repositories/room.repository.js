@@ -1,5 +1,6 @@
 import { Errors } from '../errors/errorDefinitions.js';
 import { createAppError } from '../errors/AppError.js';
+import { createDataAccessError } from '../errors/DataAccessError.js';
 
 function mapRowToRoom(row) {
   return {
@@ -15,18 +16,23 @@ export class RoomRepository {
   }
 
   async findById(id) {
-    const result = await this.query(
-      `
-      SELECT id, name, price_per_night, created_at
-      FROM rooms
-      WHERE id=$1
-      `,
-      [id]
-    )
-    if (result.rows.length === 0)
-      return null
+    try {
+      const result = await this.query(
+        `
+        SELECT id, name, price_per_night, created_at
+        FROM rooms
+        WHERE id=$1
+        `,
+        [id]
+      )
+      if (result.rows.length === 0)
+        return null
 
-    return mapRowToRoom(result.rows[0])
+      return mapRowToRoom(result.rows[0])
+    } catch (error) {
+      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+    }
+    
   }
 
   async createRoom({name, pricePerNight}) {
@@ -45,8 +51,7 @@ export class RoomRepository {
     } catch (error) {
       if (error.code === '23505')
         throw createAppError(Errors.ROOM_ALREADY_EXISTS)
-      // TODO: It must throw DataAccessError here because it's unknown
-      throw error
+      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
     }
   }
 }
