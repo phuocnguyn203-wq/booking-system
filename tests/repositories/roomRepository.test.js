@@ -34,7 +34,7 @@ async function createTestRoom(name = "Room 1", price_per_night = 200) {
   return {
     id: room.id,
     name: room.name,
-    pricePerNight: room.price_per_night
+    pricePerNight: Number(room.price_per_night)
   }
 }
 
