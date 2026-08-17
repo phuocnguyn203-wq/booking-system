@@ -25,4 +25,6 @@ export class RoomRepository {
 
     return mapRowToRoom(result.rows[0])
   }
+
+  async createRoom({})
 }

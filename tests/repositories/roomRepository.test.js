@@ -65,11 +65,11 @@ describe('RoomRepository [createRoom]', () => {
     const roomRepository = new RoomRepository(query)
     const testRoomInfo = {
       name: 'MyRoom',
-      price_per_night: 50
+      pricePerNight: 50
     }
 
     // Act
-    const newRoomReturned = await roomRepository.createRoom(roomRepository)
+    const newRoomReturned = await roomRepository.createRoom(testRoomInfo)
 
     // Assert
     expect(newRoom).toEqual(expect.objectContaining(testRoomInfo))
