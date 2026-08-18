@@ -23,7 +23,7 @@ async function createTestUser({
   hashedPassword='fake-hashed-password'
  } = {}) {
   const rowResult = await query(`
-    INSERT INTO users (email, fullname, username, hashedPassword)
+    INSERT INTO users (email, fullname, username, hashed_password)
     VALUES
     ($1, $2, $3, $4)
     RETURNING *
@@ -76,13 +76,14 @@ describe('UserRepository [createUser]', () => {
     const userInfo = {
       fullname: 'Tester1',
       email: 'tester1@gmail.com',
-      username: 'tester1'
+      username: 'tester1',
+      hashedPassword: 'fake-hashed-password'
     }
     // Act
     const newUser = await userRepository.createUser(userInfo)
 
     // Assert
-    expect(newUser.id).toEqual(expect.objectContaining(userInfo))
+    expect(newUser).toEqual(expect.objectContaining(userInfo))
     // Assert side effect
     const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [newUser.id])
     const userInDb = rowResult.rows[0]
@@ -96,7 +97,8 @@ describe('UserRepository [createUser]', () => {
     const userInfoDuplicatedname = {
       fullname: 'Tester1',
       email: 'tester1@gmail.com',
-      username: duplicatedName
+      username: duplicatedName,
+      hashedPassword: 'fake-hashed-password'
     }
     const testUser = await createTestUser({ name: duplicatedName })
 
@@ -120,7 +122,8 @@ describe('UserRepository [createUser]', () => {
     const userInfoDuplicatedname = {
       fullname: 'Tester1',
       email: duplicatedEmail,
-      username: 'tester1'
+      username: 'tester1',
+      hashedPassword: 'fake-hashed-password'
     }
     const testUser = await createTestUser({ email: duplicatedEmail })
 
