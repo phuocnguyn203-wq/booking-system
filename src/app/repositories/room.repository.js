@@ -69,4 +69,41 @@ export class RoomRepository {
       throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }
+
+  async updateRoom(id, updateInfo) {
+    const allowedFields = new Set([
+      'name',
+      'price_per_night'
+    ])
+
+    const entries = Object.entries(updateInfo).filter(
+      ([key, value]) => allowedFields.has(key) && value !== undefined
+    )
+
+    if (entries.length === 0)
+      //TODO Make NO_VALID_FIELDS attribute in errorDefinitions
+      throw createAppError(Errors.NO_VALID_FIELDS)
+    
+    const values = []
+    const setClause = entries.map(
+      ([key, value]) => {
+        values.push(value)
+        return `"${key}" = $${values.length}`
+      }
+    )
+
+    values.push(id)
+
+    const query = `
+      UPDATE rooms
+      SET ${setClause.join(', ')}
+      WHERE id = $${values.length}
+      RETURNING *;
+    `
+    const result = await this.query(query, values)
+    
+    if (result.rows.length === 0)
+      return null
+    return mapRowToRoom(result.rows[0])
+  }
 }
