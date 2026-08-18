@@ -28,8 +28,9 @@ Room obj:
 - created_at
 */
 async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_at=null }) {
+  let result
   if (deleted_at === 'now'){
-    const result = await query(
+    result = await query(
       `
       INSERT INTO rooms (name, price_per_night, deleted_at)
       VALUES
@@ -39,7 +40,7 @@ async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_
       [name, price_per_night],
     )
   } else {
-    const result = await query(
+    result = await query(
       `
       INSERT INTO rooms (name, price_per_night)
       VALUES
@@ -132,5 +133,40 @@ describe('RoomRepository [createRoom]', () => {
       [testRoom.id]
     )
     expect(resultRoomInDb.rows.length).toBe(1)
+  })
+})
+
+describe('Room Repository [deleteById]', () => {
+  it('soft deletes and returns true if it\'s soft deleted when given room id', async () => {
+    // Arrange
+    const roomRepository = new RoomRepository(query)
+    const testRoom = await createTestRoom({})
+
+    // Act
+    const is_deleted = roomRepository.deleteById(testRoom.id)
+
+    // Assert
+    await expect(is_deleted).resolves.toBe(true)
+    // Assert side effect
+    const rowResult = await query(
+      `
+      SELECT id FROM rooms
+      WHERE id=$1 AND deleted_at IS NOT NULL
+      `,
+      [testRoom.id]
+    )
+    expect(rowResult.rows.length).toBe(1)
+  })
+
+  it('returns false if it\'s already soft deleted or deleted permanently when given room id', async () => {
+    // Arrange
+    const roomRepository = new RoomRepository(query)
+    const testRoom = await createTestRoom({ deleted_at:'now' })
+
+    // Act
+    const is_deleted = await roomRepository.deleteById(testRoom.id)
+
+    // Assert
+    await expect(is_deleted).toBe(false)
   })
 })
