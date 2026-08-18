@@ -173,14 +173,47 @@ describe('Room Repository [deleteById]', () => {
 })
 
 describe('Room Repository [updateRoom]', () => {
-  it('update new name when given new name', async () => {
+  it('updates both name and pricePerNight when given new value', async () => {
+    // Arrange
+    const roomRepository = new RoomRepository(query)
+    const newName = 'New Name'
+    const newPricePerNight = 2948.10
+    const testRoom = await createTestRoom({ name: 'Old name', pricePerNight: 100.0 })
+
+    // Act
+    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName, pricePerNight: newPricePerNight })
+
+    // Assert
+    await expect(newRoom).resolves.toEqual(
+      expect.objectContaining({
+        name: newName,
+        pricePerNight: newPricePerNight
+      })
+    )
+    // Assert side effect
+    const rowResult = await query(
+      `
+      SELECT name, price_per_night FROM rooms
+      WHERE id=$1
+      `,
+      [testRoom.id]
+    )
+    const newRoomInDb = rowResult.rows[0]
+    expect(newRoomInDb).toEqual(
+      expect.objectContaining({
+        name: newRoomInDb.name,
+        pricePerNight: newRoomInDb.price_per_night
+      })
+    )
+  })
+  it('updates new name when given new name', async () => {
     // Arrange
     const roomRepository = new RoomRepository(query)
     const newName = 'New Name'
     const testRoom = await createTestRoom({ name: 'Old name' })
 
     // Act
-    const newRoom = roomRepository.updateRoom({ id: testRoom.id, name: newName })
+    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName })
 
     // Assert
     await expect(newRoom.name).toBe(newName)
@@ -195,14 +228,14 @@ describe('Room Repository [updateRoom]', () => {
     expect(rowResult.rows[0].name).toBe(newName)
   })
 
-  it('update new pricePerNight when given new pricePerNight', async () => {
+  it('updates new pricePerNight when given new pricePerNight', async () => {
     // Arrange
     const roomRepository = new RoomRepository(query)
     const pricePerNight = 1000.0
     const testRoom = await createTestRoom({ pricePerNight })
 
     // Act
-    const newRoom = roomRepository.updateRoom({ id: testRoom.id, pricePerNight: pricePerNight })
+    const newRoom = roomRepository.updateRoom(testRoom.id, { pricePerNight: pricePerNight })
 
     // Assert
     await expect(newRoom.pricePerNight).toBe(pricePerNight)
