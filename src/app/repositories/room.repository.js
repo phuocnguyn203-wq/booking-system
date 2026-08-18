@@ -54,4 +54,19 @@ export class RoomRepository {
       throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
     }
   }
+
+  async deleteById(id) {
+    try {
+      const result = await this.query(
+        `
+        UPDATE rooms SET deleted_at=NOW()
+        WHERE id=$1 AND deleted_at IS NULL
+        `,
+        [id]
+      )
+      return result.rowCount === 1
+    } catch (error) {
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
+    }
+  }
 }
