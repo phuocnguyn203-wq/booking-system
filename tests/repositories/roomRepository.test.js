@@ -181,7 +181,7 @@ describe('Room Repository [updateRoom]', () => {
     const testRoom = await createTestRoom({ name: 'Old name', pricePerNight: 100.0 })
 
     // Act
-    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName, pricePerNight: newPricePerNight })
+    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName, price_per_night: newPricePerNight })
 
     // Assert
     await expect(newRoom).resolves.toEqual(
@@ -202,7 +202,7 @@ describe('Room Repository [updateRoom]', () => {
     expect(newRoomInDb).toEqual(
       expect.objectContaining({
         name: newRoomInDb.name,
-        pricePerNight: newRoomInDb.price_per_night
+        price_per_night: newRoomInDb.price_per_night
       })
     )
   })
@@ -213,14 +213,14 @@ describe('Room Repository [updateRoom]', () => {
     const testRoom = await createTestRoom({ name: 'Old name' })
 
     // Act
-    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName })
+    const newRoom = await roomRepository.updateRoom(testRoom.id, { name: newName })
 
     // Assert
-    await expect(newRoom.name).toBe(newName)
+    expect(newRoom.name).toBe(newName)
     //Assert side effect
     const rowResult = await query(
       `
-      SELECT name FROM rows
+      SELECT name FROM rooms
       WHERE id=$1
       `,
       [testRoom.id]
@@ -235,18 +235,18 @@ describe('Room Repository [updateRoom]', () => {
     const testRoom = await createTestRoom({ pricePerNight })
 
     // Act
-    const newRoom = roomRepository.updateRoom(testRoom.id, { pricePerNight: pricePerNight })
+    const newRoom = await roomRepository.updateRoom(testRoom.id, { price_per_night: pricePerNight })
 
     // Assert
-    await expect(newRoom.pricePerNight).toBe(pricePerNight)
+    expect(newRoom.pricePerNight).toBe(pricePerNight)
     //Assert side effect
     const rowResult = await query(
       `
-      SELECT pricePerNight FROM rows
+      SELECT price_per_night FROM rooms
       WHERE id=$1
       `,
       [testRoom.id]
     )
-    expect(rowResult.rows[0].price_per_night).toBe(pricePerNight)
+    expect(Number(rowResult.rows[0].price_per_night)).toBe(pricePerNight)
   })
 })
