@@ -1,4 +1,4 @@
-import { describe, it, afterAll, beforeEach } from 'vitest'
+import { describe, it, afterAll, beforeEach, expect } from 'vitest'
 import { query } from '../../src/database/index.js'
 import { UserRepository } from '../../src/app/repositories/users.repository.js'
 
@@ -55,7 +55,7 @@ describe('UserRepository [getById]', () => {
     const nonExistId = 999
 
     // Act
-    const user = await userRepository.findById(nonExistid)
+    const user = await userRepository.findById(nonExistId)
 
     // Assert
     expect(user).toBeNull()
