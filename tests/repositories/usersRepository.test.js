@@ -139,4 +139,39 @@ describe('UserRepository [createUser]', () => {
     const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [testUser.id])
     expect(rowResult.rows.length).toBe(1)
   })
+
+  it('throws AppError and doesn\'t add user to database when given nothing', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    
+    // Act
+    const user = userRepository.createUser({})
+
+    // Expect
+    await expect(user).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'Required field is missing'
+    })
+  })
+
+  it('throws AppErrors and doesn\'t add user to database when given invalid email', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const invalidEmail = '.invalid@example.com'
+    const userInfoDuplicatedname = {
+      fullname: 'Tester1',
+      email: invalidEmail,
+      username: 'tester1',
+      hashedPassword: 'fake-hashed-password'
+    }
+
+    // Act
+    const user = userRepository.createUser(userInfoDuplicatedname)
+
+    // Assert
+    await expect(user).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'Email is not valid'
+    })
+  })
 })
