@@ -68,3 +68,72 @@ describe('UserRepository [getById]', () => {
     expect(user).toBeNull()
   })
 })
+
+describe('UserRepository [createUser]', () => {
+  it('returns and adds user to database when given email and hashedPassword', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const userInfo = {
+      fullname: 'Tester1',
+      email: 'tester1@gmail.com',
+      username: 'tester1'
+    }
+    // Act
+    const newUser = await userRepository.createUser(userInfo)
+
+    // Assert
+    expect(newUser.id).toEqual(expect.objectContaining(userInfo))
+    // Assert side effect
+    const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [newUser.id])
+    const userInDb = rowResult.rows[0]
+    expect(userInDb.id).toBe(newUser.id)
+  })
+
+  it('throws AppError and doesn\'t user to database when given duplicated username', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const duplicatedName = 'John'
+    const userInfoDuplicatedname = {
+      fullname: 'Tester1',
+      email: 'tester1@gmail.com',
+      username: duplicatedName
+    }
+    const testUser = await createTestUser({ name: duplicatedName })
+
+    // Act
+    const user = userRepository.createUser(userInfoDuplicatedname)
+
+    // Assert
+    expect(user).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'An account with provided information already exists.'
+    })
+    // Assert side effect
+    const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [testUser.id])
+    expect(rowResult.rows.length).toBe(1)
+  })
+
+  it('throws AppError and doesn\'t user to database when given duplicated email', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const duplicatedEmail = 'john@gmail.com'
+    const userInfoDuplicatedname = {
+      fullname: 'Tester1',
+      email: duplicatedEmail,
+      username: 'tester1'
+    }
+    const testUser = await createTestUser({ email: duplicatedEmail })
+
+    // Act
+    const user = userRepository.createUser(userInfoDuplicatedname)
+
+    // Assert
+    expect(user).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'An account with provided information already exists.'
+    })
+    // Assert side effect
+    const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [testUser.id])
+    expect(rowResult.rows.length).toBe(1)
+  })
+})
