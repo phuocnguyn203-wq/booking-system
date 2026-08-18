@@ -20,8 +20,8 @@ export const Errors = {
     message: 'An account with provided information already exists.'
   },
   EMAIL_VALIDATION: {
-    statusCode: 409,
+    statusCode: 400,
     code: 'EMAIL_VALIDATION',
-    message: 'Email already exists'
+    message: 'Email is not valid'
   }
 }
