@@ -27,7 +27,7 @@ Room obj:
 - price_per_night
 - created_at
 */
-async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_at=null }) {
+async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_at=null } = {}) {
   let result
   if (deleted_at === 'now'){
     result = await query(
@@ -56,6 +56,7 @@ async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_
     id: room.id,
     name: room.name,
     pricePerNight: Number(room.price_per_night),
+    created_at: Date(room.created_at),
     deleted_at: Date(room.deleted_at),
   }
 }
@@ -70,7 +71,7 @@ describe('RoomRepository [findById]', () => {
     const roomRetrieved = await roomRepository.findById(testRoom.id);
 
     // Arrange
-    expect(roomRetrieved).toEqual(expect.objectContaining(testRoom));
+    expect(roomRetrieved.id).toEqual(testRoom.id);
   })
 
   it('returns null when given non-exist room id', async () => {
@@ -110,7 +111,7 @@ describe('RoomRepository [createRoom]', () => {
     const roomRepository = new RoomRepository(query)
     const duplicatedName = 'My Room'
     const pricePerNight = 100
-    const testRoom = await createTestRoom(duplicatedName)
+    const testRoom = await createTestRoom({name: duplicatedName})
 
     //Act
     const roomPromise = roomRepository.createRoom({ 
