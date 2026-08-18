@@ -16,21 +16,28 @@ afterAll(async() => {
   await query(CLEAN_QUERY)
 })
 
-async function createTestUser({ email='testUser@gmail.com', fullname='Tester User' }={}) {
+async function createTestUser({ 
+  email='testUser@gmail.com', 
+  fullname='Tester User',
+  username='tester1',
+  hashedPassword='fake-hashed-password'
+ } = {}) {
   const rowResult = await query(`
-    INSERT INTO users (email, fullname)
+    INSERT INTO users (email, fullname, username, hashedPassword)
     VALUES
-    ($1, $2)
+    ($1, $2, $3, $4)
     RETURNING *
     `,
-    [email, fullname]
+    [email, fullname, username, hashedPassword]
   )
 
   const user = rowResult.rows[0]
   return {
     id: user.id,
     email: user.email,
-    fullname: user.fullname
+    fullname: user.fullname,
+    username: user.username,
+    hashedPassword: user.hashedPassword
   }
 }
 
