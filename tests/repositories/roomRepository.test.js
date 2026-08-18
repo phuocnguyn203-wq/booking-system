@@ -1,4 +1,4 @@
-import { it, beforeEach, expect, describe } from "vitest";
+import { it, beforeEach, afterAll, expect, describe } from "vitest";
 
 import { RoomRepository } from "../../src/app/repositories/room.repository";
 import { query } from "../../src/database/index.js";
@@ -12,6 +12,14 @@ beforeEach(async () => {
     DELETE FROM bookings;
     `);
 });
+
+afterAll(async () => {
+  await query(`
+    DELETE FROM users;
+    DELETE FROM rooms;
+    DELETE FROM bookings;
+    `)
+})
 /*
 Room obj:
 - id
@@ -19,22 +27,35 @@ Room obj:
 - price_per_night
 - created_at
 */
-async function createTestRoom(name = "Room 1", price_per_night = 200) {
-  const result = await query(
-    `
-    INSERT INTO rooms (name, price_per_night)
-    VALUES
-    ($1, $2)
-    RETURNING *;
-    `,
-    [name, price_per_night],
-  );
+async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_at=null }) {
+  if (deleted_at === 'now'){
+    const result = await query(
+      `
+      INSERT INTO rooms (name, price_per_night, deleted_at)
+      VALUES
+      ($1, $2, NOW())
+      RETURNING *;
+      `,
+      [name, price_per_night],
+    )
+  } else {
+    const result = await query(
+      `
+      INSERT INTO rooms (name, price_per_night)
+      VALUES
+      ($1, $2)
+      RETURNING *;
+      `,
+      [name, price_per_night],
+    )
+  }
 
   const room = result.rows[0]
   return {
     id: room.id,
     name: room.name,
-    pricePerNight: Number(room.price_per_night)
+    pricePerNight: Number(room.price_per_night),
+    deleted_at: Date(room.deleted_at),
   }
 }
 
