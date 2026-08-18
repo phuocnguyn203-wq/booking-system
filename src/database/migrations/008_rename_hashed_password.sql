@@ -1,0 +1,1 @@
+ALTER TABLE users RENAME hashedPassword TO hashed_password;
