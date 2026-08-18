@@ -27,7 +27,7 @@ Room obj:
 - price_per_night
 - created_at
 */
-async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_at=null } = {}) {
+async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=null } = {}) {
   let result
   if (deleted_at === 'now'){
     result = await query(
@@ -37,7 +37,7 @@ async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_
       ($1, $2, NOW())
       RETURNING *;
       `,
-      [name, price_per_night],
+      [name, pricePerNight],
     )
   } else {
     result = await query(
@@ -47,7 +47,7 @@ async function createTestRoom({ name = "Room 1", price_per_night = 200, deleted_
       ($1, $2)
       RETURNING *;
       `,
-      [name, price_per_night],
+      [name, pricePerNight],
     )
   }
 
@@ -169,5 +169,51 @@ describe('Room Repository [deleteById]', () => {
 
     // Assert
     await expect(is_deleted).toBe(false)
+  })
+})
+
+describe('Room Repository [updateRoom]', () => {
+  it('update new name when given new name', async () => {
+    // Arrange
+    const roomRepository = new RoomRepository(query)
+    const newName = 'New Name'
+    const testRoom = await createTestRoom({ name: 'Old name' })
+
+    // Act
+    const newRoom = roomRepository.updateRoom({ id: testRoom.id, name: newName })
+
+    // Assert
+    await expect(newRoom.name).toBe(newName)
+    //Assert side effect
+    const rowResult = await query(
+      `
+      SELECT name FROM rows
+      WHERE id=$1
+      `,
+      [testRoom.id]
+    )
+    expect(rowResult.rows[0].name).toBe(newName)
+  })
+
+  it('update new pricePerNight when given new pricePerNight', async () => {
+    // Arrange
+    const roomRepository = new RoomRepository(query)
+    const pricePerNight = 1000.0
+    const testRoom = await createTestRoom({ pricePerNight })
+
+    // Act
+    const newRoom = roomRepository.updateRoom({ id: testRoom.id, pricePerNight: pricePerNight })
+
+    // Assert
+    await expect(newRoom.pricePerNight).toBe(pricePerNight)
+    //Assert side effect
+    const rowResult = await query(
+      `
+      SELECT pricePerNight FROM rows
+      WHERE id=$1
+      `,
+      [testRoom.id]
+    )
+    expect(rowResult.rows[0].price_per_night).toBe(pricePerNight)
   })
 })
