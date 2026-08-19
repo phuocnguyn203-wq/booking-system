@@ -23,5 +23,10 @@ export const Errors = {
     statusCode: 400,
     code: 'EMAIL_VALIDATION',
     message: 'Email is not valid'
+  },
+  NO_VALID_FIELDS: {
+    statusCode: 400,
+    code: 'NO_VALID_FIELDS',
+    message: 'Field names are not correct.'
   }
 }

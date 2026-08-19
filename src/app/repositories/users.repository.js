@@ -7,7 +7,7 @@ import { createDataAccessError } from '../errors/DataAccessError.js'
 
 function mapRowToUser(userRow) {
   return {
-    id: userRow.id,
+    id: Number(userRow.id),
     fullname: userRow.fullname,
     email: userRow.email,
     username: userRow.username,
@@ -63,5 +63,35 @@ export class UserRepository {
       throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
       console.log(error)
     }
+  }
+
+  async updateUser(id, updateInfo) {
+    const allowedFields = new Set(['email', 'fullname'])
+    
+    const entries = Object.entries(updateInfo).filter(
+      ([key, value]) => allowedFields.has(key) && value !== undefined
+    )
+    if (entries.length === 0)
+      throw createAppError(Errors.NO_VALID_FIELDS)
+
+    const setClause = []
+    const values = entries.map(([key, value]) => {
+      setClause.push(`${key}=$${setClause.length+1}`)
+      return value
+    })
+    values.push(id)
+
+    const rowResult = await query(
+    `
+    UPDATE users SET ${setClause.join(', ')}
+    WHERE id=$${values.length}
+    RETURNING *
+    `,
+    values
+    )
+    
+    if (rowResult.rows.length === 0)
+      return null
+    return mapRowToUser(rowResult.rows[0])    
   }
 }
