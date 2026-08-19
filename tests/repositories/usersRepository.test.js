@@ -20,15 +20,16 @@ async function createTestUser({
   email='testUser@gmail.com', 
   fullname='Tester User',
   username='tester1',
-  hashedPassword='fake-hashed-password'
+  hashedPassword='fake-hashed-password',
+  isDeleted=false
  } = {}) {
   const rowResult = await query(`
-    INSERT INTO users (email, fullname, username, hashed_password)
+    INSERT INTO users (email, fullname, username, hashed_password, is_deleted)
     VALUES
-    ($1, $2, $3, $4)
+    ($1, $2, $3, $4, $5)
     RETURNING *
     `,
-    [email, fullname, username, hashedPassword]
+    [email, fullname, username, hashedPassword, isDeleted]
   )
 
   const user = rowResult.rows[0]
@@ -37,7 +38,8 @@ async function createTestUser({
     email: user.email,
     fullname: user.fullname,
     username: user.username,
-    hashedPassword: user.hashedPassword
+    hashedPassword: user.hashedPassword,
+    isDeleted: user.isDeleted
   }
 }
 
@@ -230,5 +232,34 @@ describe('UserRepository [updateUser]', () => {
     
     // Assert
     expect(user).toBeNull()
+  })
+})
+
+describe('UserRepository [deleteUser]', () => {
+  it('returns number of row affected and soft deletes user when given id', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const testUser = await createTestUser()
+
+    // Act
+    const rowAffected = await userRepository.deleteUser(testUser.id)
+
+    // Assert
+    expect(rowAffected).toBe(1)
+    // Assert side effect
+    const rowResult = await query(`SELECT id FROM users WHERE id=$1 AND is_deleted=true`, [testUser.id])
+    expect(rowResult.rows.length).toBe(1)
+  })
+
+  it('returns 0 when given user deleted already', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const testUser = await createTestUser({ isDeleted: true })
+
+    // Act
+    const rowAffected = await userRepository.deleteUser(testUser.id)
+
+    // Assert
+    expect(rowAffected).toBe(0)
   })
 })
