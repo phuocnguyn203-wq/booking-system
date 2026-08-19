@@ -175,3 +175,30 @@ describe('UserRepository [createUser]', () => {
     })
   })
 })
+
+describe('UserRepository [updateUser]', () => {
+  it('returns newUser and updates user in database', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const testUser = await createTestUser()
+    const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
+
+    // Act
+    const user = await userRepository.updateUser(updateInfo)
+
+    // Assert
+    expect(user).toMatchObject(testUser.id, updateInfo)
+    // Assert side effect
+    const rowResult = await query(
+      `
+      SELECT * FROM users
+      WHERE id=$1
+      `,
+      [testUser.id]
+    )
+    const userInDb = rowResult.rows[0]
+    expect(userInDb).toMatchObject(updateInfo)
+  })
+
+  it('returns ')
+})
