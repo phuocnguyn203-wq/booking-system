@@ -33,7 +33,7 @@ async function createTestUser({
 
   const user = rowResult.rows[0]
   return {
-    id: user.id,
+    id: parseInt(user.id, 10),
     email: user.email,
     fullname: user.fullname,
     username: user.username,
@@ -87,7 +87,7 @@ describe('UserRepository [createUser]', () => {
     // Assert side effect
     const rowResult = await query(`SELECT id FROM users WHERE id=$1`, [newUser.id])
     const userInDb = rowResult.rows[0]
-    expect(userInDb.id).toBe(newUser.id)
+    expect(userInDb.id).toBe(newUser.id.toString())
   })
 
   it('throws AppError and doesn\'t user to database when given duplicated username', async () => {
@@ -100,13 +100,12 @@ describe('UserRepository [createUser]', () => {
       username: duplicatedName,
       hashedPassword: 'fake-hashed-password'
     }
-    const testUser = await createTestUser({ name: duplicatedName })
+    const testUser = await createTestUser({ username: duplicatedName })
 
     // Act
     const user = userRepository.createUser(userInfoDuplicatedname)
-
     // Assert
-    expect(user).rejects.toMatchObject({
+    await expect(user).rejects.toMatchObject({
       statusCode: 409,
       message: 'An account with provided information already exists.'
     })
