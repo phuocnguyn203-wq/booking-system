@@ -200,5 +200,35 @@ describe('UserRepository [updateUser]', () => {
     expect(userInDb).toMatchObject(updateInfo)
   })
 
-  it('returns ')
+  it('throws AppError when it\'s given all invalid fields', async () => {
+    // Arrange
+    const userRepository = new UserRepository(query)
+    const testUser = await createTestUser()
+    const invalidFieldUpdate = { myUserName: 'John', newEmail: 'newEmail@gmail.com' }
+
+    // Act
+    const user = userRepository.updateUser(testUser.id, invalidFieldUpdate)
+
+    // Assert
+    await expect(user).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'Field names are not correct.'
+    })
+    // Assert side effect
+    const rowResult = await query(`SELECT * FROM users WHERE id=$1`, [testUser.id])
+    const userInDb = rowResult.rows[0]
+    expect(userInDb).not.toMatchObject(invalidFieldUpdate)
+  })
+
+  it('returns null when it doesn\'t find user match given id', async () => {
+    // Arrange
+    const nonExistId = 999
+    const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
+    
+    // Act
+    const user = await userRepository.updateUser(nonExistId, updateInfo)
+    
+    // Assert
+    expect(user).toBeNull()
+  })
 })
