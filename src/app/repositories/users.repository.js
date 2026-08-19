@@ -94,4 +94,15 @@ export class UserRepository {
       return null
     return mapRowToUser(rowResult.rows[0])    
   }
+
+  async deleteUser(id) {
+    try{
+      const rowResult = await this.query(`UPDATE users SET is_deleted=true WHERE id=$1 AND is_deleted=false`, [id])
+      
+      return rowResult.rowCount
+    } catch (error) {
+      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+    }
+
+  }
 }
