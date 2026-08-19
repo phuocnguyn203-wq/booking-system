@@ -184,10 +184,10 @@ describe('UserRepository [updateUser]', () => {
     const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
 
     // Act
-    const user = await userRepository.updateUser(updateInfo)
+    const user = await userRepository.updateUser(testUser.id, updateInfo)
 
     // Assert
-    expect(user).toMatchObject(testUser.id, updateInfo)
+    expect(user).toMatchObject(updateInfo)
     // Assert side effect
     const rowResult = await query(
       `
@@ -211,7 +211,7 @@ describe('UserRepository [updateUser]', () => {
 
     // Assert
     await expect(user).rejects.toMatchObject({
-      statusCode: 409,
+      statusCode: 400,
       message: 'Field names are not correct.'
     })
     // Assert side effect
@@ -222,6 +222,7 @@ describe('UserRepository [updateUser]', () => {
 
   it('returns null when it doesn\'t find user match given id', async () => {
     // Arrange
+    const userRepository = new UserRepository(query)
     const nonExistId = 999
     const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
     
