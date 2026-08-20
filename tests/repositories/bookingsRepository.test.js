@@ -112,3 +112,29 @@ async function createTestBookingWrapper() {
 
   return booking
 }
+
+describe('BookingRepository [getById]', () => {
+  it('returns booking object when given booking id', async () => {
+    // Arrange
+    const bookingRepository = new BookingRepository(query)
+    const testBooking = await createTestBookingWrapper()
+
+    // Act
+    const booking = await bookingRepository.getById(testBooking.id)
+
+    // Assert
+    expect(booking).toMatchObject(testBooking)
+  })
+
+  it('returns null when given non-exist id', async () => {
+    // Arrange
+    const bookingRepository = new BookingRepository(query) 
+    const nonExistId = 1000
+
+    // Act
+    const booking = bookingRepository.getById(nonExistId)
+
+    // Assert
+    expect(booking).toBeNull()
+  })
+})
