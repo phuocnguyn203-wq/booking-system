@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, test } from 'vitest'
 import { query } from '../../src/database/index.js'
-
+import { BookingRepository } from '../../src/app/repositories/bookings.repositories.js'
 
 const CLEAN_QUERY = `
   DELETE FROM bookings;
@@ -132,7 +132,7 @@ describe('BookingRepository [getById]', () => {
     const nonExistId = 1000
 
     // Act
-    const booking = bookingRepository.getById(nonExistId)
+    const booking = await bookingRepository.getById(nonExistId)
 
     // Assert
     expect(booking).toBeNull()
