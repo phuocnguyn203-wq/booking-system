@@ -278,4 +278,43 @@ describe('BookingRepository [deleteById]', () => {
     // Assert
     expect(is_deleted).toBe(false)
   })
+
+  describe('BookingRepository [updateBooking]', () => {
+    it('returns new booking and updates booking in database', async () => {
+      // Arrange
+      const bookingRepository = new BookingRepository(query)
+      const testBooking = await createTestBookingWrapper()
+
+      const updateInfo = {
+        check_out: addDay(Date.now(), 10).toISOString().split('T')[0],
+        status: 'confirmed'
+      }
+
+      // Act
+      const booking = await bookingRepository.updateBooking(testBooking.id, updateInfo)
+
+      // Assert
+      expect(booking).toMatchObject(updateInfo)
+      // Assert side effect
+      const rowResult = await query(`SELECT * FROM bookings WHERE id=$1`, [testBooking.id])
+      const bookingInDb = rowResult.rows[0]
+      expect(bookingInDb.status).toBe(updateInfo.status)
+      expect(bookingInDb.checkOutDate).toBe(updateInfo.checkOutDate)
+    })
+
+    it('returns null when given non-existent id', async () => {
+      // Arrange
+      const bookingRepository = new BookingRepository(query)
+      const nonExistId = 1000
+      const updateInfo = {
+        check_out: addDay(Date.now(), 10).toISOString().split('T')[0],
+        status: 'completed'
+      }
+      // Act
+      const booking = await bookingRepository.updateBooking(nonExistId, updateInfo)
+
+      // Assert
+      expect(booking).toBeNull()
+    })
+  })
 })
