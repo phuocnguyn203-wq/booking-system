@@ -1,9 +1,8 @@
 import { it, beforeEach, afterAll, expect, describe } from "vitest";
 
-import { RoomRepository } from "../../src/app/repositories/room.repository";
+import { RoomRepository } from "../../src/app/repositories/rooms.repository.js";
 import { query } from "../../src/database/index.js";
 
-import { AppError, createAppError } from "../../src/app/errors/AppError.js";
 
 beforeEach(async () => {
   await query(`
