@@ -16,7 +16,7 @@ export default class BookingRepository {
     this.query = query
   }
 
-  async getById(id) {
+  async findById(id) {
     try {
       const rowResult = await this.query(
         `

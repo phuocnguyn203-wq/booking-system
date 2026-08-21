@@ -20,13 +20,13 @@ function addDay(date, days) {
   return new Date(date + days * 24 * 60 * 60 * 1000)
 }
 
-describe('BookingRepository [getById]', () => {
+describe('BookingRepository [findById]', () => {
   it('returns booking object when given booking id', async({ bookingRepository }) => {
     // Arrange
     const testBooking = await createTestBookingWrapper()
 
     // Act
-    const booking = await bookingRepository.getById(testBooking.id)
+    const booking = await bookingRepository.findById(testBooking.id)
 
     // Assert
     expect(booking).toMatchObject(testBooking)
@@ -37,7 +37,7 @@ describe('BookingRepository [getById]', () => {
     const nonExistId = 1000
 
     // Act
-    const booking = await bookingRepository.getById(nonExistId)
+    const booking = await bookingRepository.findById(nonExistId)
 
     // Assert
     expect(booking).toBeNull()
@@ -48,7 +48,7 @@ describe('BookingRepository [getById]', () => {
     const bookingTest = await createTestBookingWrapper({ isDeleted: true })
 
     // Act
-    const booking = await bookingRepository.getById(bookingTest.id)
+    const booking = await bookingRepository.findById(bookingTest.id)
 
     // Assert
     expect(booking).toBeNull()
