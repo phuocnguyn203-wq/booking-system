@@ -1,6 +1,11 @@
-import { describe, it, afterAll, beforeEach, expect } from 'vitest'
+import { describe, afterAll, beforeEach, expect } from 'vitest'
+import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
 import UserRepository from '../../src/app/repositories/users.repository.js'
+
+const it = baseIt.extend('userRepository', () => {
+  return new UserRepository(query)
+})
 
 const CLEAN_QUERY = `
   DELETE FROM bookings;
@@ -44,9 +49,8 @@ async function createTestUser({
 }
 
 describe('UserRepository [getById]', () => {
-  it('returns user when given id', async () => {
+  it('returns user when given id', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const testUser = await createTestUser()
 
     // Act
@@ -58,9 +62,8 @@ describe('UserRepository [getById]', () => {
     expect(user.email).toBe(testUser.email)
   })
 
-  it('returns null when given non-exist id', async () => {
+  it('returns null when given non-exist id', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const nonExistId = 999
 
     // Act
@@ -72,9 +75,8 @@ describe('UserRepository [getById]', () => {
 })
 
 describe('UserRepository [createUser]', () => {
-  it('returns and adds user to database when given email and hashedPassword', async () => {
+  it('returns and adds user to database when given email and hashedPassword', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const userInfo = {
       fullname: 'Tester1',
       email: 'tester1@gmail.com',
@@ -92,9 +94,8 @@ describe('UserRepository [createUser]', () => {
     expect(userInDb.id).toBe(newUser.id.toString())
   })
 
-  it('throws AppError and doesn\'t user to database when given duplicated username', async () => {
+  it('throws AppError and doesn\'t user to database when given duplicated username', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const duplicatedName = 'John'
     const userInfoDuplicatedname = {
       fullname: 'Tester1',
@@ -116,9 +117,8 @@ describe('UserRepository [createUser]', () => {
     expect(rowResult.rows.length).toBe(1)
   })
 
-  it('throws AppError and doesn\'t user to database when given duplicated email', async () => {
+  it('throws AppError and doesn\'t user to database when given duplicated email', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const duplicatedEmail = 'john@gmail.com'
     const userInfoDuplicatedname = {
       fullname: 'Tester1',
@@ -141,9 +141,8 @@ describe('UserRepository [createUser]', () => {
     expect(rowResult.rows.length).toBe(1)
   })
 
-  it('throws AppError and doesn\'t add user to database when given nothing', async () => {
+  it('throws AppError and doesn\'t add user to database when given nothing', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     
     // Act
     const user = userRepository.createUser({})
@@ -155,9 +154,8 @@ describe('UserRepository [createUser]', () => {
     })
   })
 
-  it('throws AppErrors and doesn\'t add user to database when given invalid email', async () => {
+  it('throws AppErrors and doesn\'t add user to database when given invalid email', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const invalidEmail = '.invalid@example.com'
     const userInfoDuplicatedname = {
       fullname: 'Tester1',
@@ -178,9 +176,8 @@ describe('UserRepository [createUser]', () => {
 })
 
 describe('UserRepository [updateUser]', () => {
-  it('returns newUser and updates user in database', async () => {
+  it('returns newUser and updates user in database', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const testUser = await createTestUser()
     const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
 
@@ -201,9 +198,8 @@ describe('UserRepository [updateUser]', () => {
     expect(userInDb).toMatchObject(updateInfo)
   })
 
-  it('throws AppError when it\'s given all invalid fields', async () => {
+  it('throws AppError when it\'s given all invalid fields', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const testUser = await createTestUser()
     const invalidFieldUpdate = { myUserName: 'John', newEmail: 'newEmail@gmail.com' }
 
@@ -221,9 +217,8 @@ describe('UserRepository [updateUser]', () => {
     expect(userInDb).not.toMatchObject(invalidFieldUpdate)
   })
 
-  it('returns null when it doesn\'t find user match given id', async () => {
+  it('returns null when it doesn\'t find user match given id', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const nonExistId = 999
     const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
     
@@ -236,9 +231,8 @@ describe('UserRepository [updateUser]', () => {
 })
 
 describe('UserRepository [deleteUser]', () => {
-  it('returns number of row affected and soft deletes user when given id', async () => {
+  it('returns number of row affected and soft deletes user when given id', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const testUser = await createTestUser()
 
     // Act
@@ -251,9 +245,8 @@ describe('UserRepository [deleteUser]', () => {
     expect(rowResult.rows.length).toBe(1)
   })
 
-  it('returns 0 when given user deleted already', async () => {
+  it('returns 0 when given user deleted already', async ({ userRepository }) => {
     // Arrange
-    const userRepository = new UserRepository(query)
     const testUser = await createTestUser({ isDeleted: true })
 
     // Act

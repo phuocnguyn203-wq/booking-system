@@ -1,10 +1,13 @@
-import { it, beforeEach, afterAll, expect, describe } from "vitest";
-
+import { beforeEach, afterAll, expect, describe } from "vitest";
+import { it as baseIt } from 'vitest'
 import RoomRepository from "../../src/app/repositories/rooms.repository.js";
 import { query } from "../../src/database/index.js";
 
+const it = baseIt.extend('roomRepository', () => {
+  return new RoomRepository(query)
+})
 
-beforeEach(async () => {
+beforeEach(async() => {
   await query(`
     DELETE FROM users;
     DELETE FROM rooms;
@@ -12,7 +15,7 @@ beforeEach(async () => {
     `);
 });
 
-afterAll(async () => {
+afterAll(async() => {
   await query(`
     DELETE FROM users;
     DELETE FROM rooms;
@@ -61,9 +64,8 @@ async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=nul
 }
 
 describe('RoomRepository [findById]', () => {
-  it('returns room object when given existed room id', async () => {
+  it('returns room object when given existed room id', async ({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query);
     const testRoom = await createTestRoom();
 
     // Act
@@ -73,9 +75,8 @@ describe('RoomRepository [findById]', () => {
     expect(roomRetrieved.id).toEqual(testRoom.id);
   })
 
-  it('returns null when given non-exist room id', async () => {
+  it('returns null when given non-exist room id', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const nonExistId = 10
 
     // Act
@@ -87,9 +88,8 @@ describe('RoomRepository [findById]', () => {
 })
 
 describe('RoomRepository [createRoom]', () => {
-  it('creates and returns room object', async () => {
+  it('creates and returns room object', async({ roomRepository }) => {
     // Arrance
-    const roomRepository = new RoomRepository(query)
     const testRoomInfo = {
       name: 'MyRoom',
       pricePerNight: 50
@@ -105,9 +105,8 @@ describe('RoomRepository [createRoom]', () => {
     expect(newRoomInDb).toEqual(newRoomReturned)
   })
 
-  it('doesnot create and raises AppError when given duplicated name', async () => {
+  it('doesnot create and raises AppError when given duplicated name', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const duplicatedName = 'My Room'
     const pricePerNight = 100
     const testRoom = await createTestRoom({name: duplicatedName})
@@ -137,9 +136,8 @@ describe('RoomRepository [createRoom]', () => {
 })
 
 describe('Room Repository [deleteById]', () => {
-  it('soft deletes and returns true if it\'s soft deleted when given room id', async () => {
+  it('soft deletes and returns true if it\'s soft deleted when given room id', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const testRoom = await createTestRoom({})
 
     // Act
@@ -158,9 +156,8 @@ describe('Room Repository [deleteById]', () => {
     expect(rowResult.rows.length).toBe(1)
   })
 
-  it('returns false if it\'s already soft deleted or deleted permanently when given room id', async () => {
+  it('returns false if it\'s already soft deleted or deleted permanently when given room id', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const testRoom = await createTestRoom({ deleted_at:'now' })
 
     // Act
@@ -172,9 +169,8 @@ describe('Room Repository [deleteById]', () => {
 })
 
 describe('Room Repository [updateRoom]', () => {
-  it('updates both name and pricePerNight when given new value', async () => {
+  it('updates both name and pricePerNight when given new value', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const newName = 'New Name'
     const newPricePerNight = 2948.10
     const testRoom = await createTestRoom({ name: 'Old name', pricePerNight: 100.0 })
@@ -205,9 +201,8 @@ describe('Room Repository [updateRoom]', () => {
       })
     )
   })
-  it('updates new name when given new name', async () => {
+  it('updates new name when given new name', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const newName = 'New Name'
     const testRoom = await createTestRoom({ name: 'Old name' })
 
@@ -227,9 +222,8 @@ describe('Room Repository [updateRoom]', () => {
     expect(rowResult.rows[0].name).toBe(newName)
   })
 
-  it('updates new pricePerNight when given new pricePerNight', async () => {
+  it('updates new pricePerNight when given new pricePerNight', async({ roomRepository }) => {
     // Arrange
-    const roomRepository = new RoomRepository(query)
     const pricePerNight = 1000.0
     const testRoom = await createTestRoom({ pricePerNight })
 

@@ -1,7 +1,12 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest'
+import { describe, expect, beforeEach, afterAll } from 'vitest'
+import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
 import BookingRepository from '../../src/app/repositories/bookings.repository.js'
 import { mapRowToBooking } from '../../src/app/repositories/bookings.repository.js'
+
+const it = baseIt.extend('bookingRepository', () => {
+  return new BookingRepository(query)
+})
 
 const CLEAN_QUERY = `
   DELETE FROM bookings;
@@ -127,9 +132,8 @@ function addDay(date, days) {
 }
 
 describe('BookingRepository [getById]', () => {
-  it('returns booking object when given booking id', async () => {
+  it('returns booking object when given booking id', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testBooking = await createTestBookingWrapper()
 
     // Act
@@ -139,9 +143,8 @@ describe('BookingRepository [getById]', () => {
     expect(booking).toMatchObject(testBooking)
   })
 
-  it('returns null when given non-existent id', async () => {
+  it('returns null when given non-existent id', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query) 
     const nonExistId = 1000
 
     // Act
@@ -153,9 +156,8 @@ describe('BookingRepository [getById]', () => {
 })
 
 describe('BookingRepository [createBooking]', () => {
-  it('returns new booking object and stores new booking in database', async () => {
+  it('returns new booking object and stores new booking in database', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testRoom = await createTestRoom()
     const testUser = await createTestUser()
     const bookingInfo = {
@@ -176,9 +178,8 @@ describe('BookingRepository [createBooking]', () => {
     expect (mapRowToBooking(rowResult.rows[0])).toMatchObject(bookingInfo)
   })
 
-  it('throws AppError and does not insert into database when given checkOutDate earlier than checkInDate', async () => {
+  it('throws AppError and does not insert into database when given checkOutDate earlier than checkInDate', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testUser = await createTestUser()
     const testRoom = await createTestRoom()
     const bookingInfo = {
@@ -205,9 +206,8 @@ describe('BookingRepository [createBooking]', () => {
     expect(rowResult.rows.length).toBe(0)
   })
 
-  it('throws AppError when given non-existent userId', async () => {
+  it('throws AppError when given non-existent userId', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testRoom = await createTestRoom()
     const bookingInfoNonExistUserId = {
       userId: 1, 
@@ -227,9 +227,8 @@ describe('BookingRepository [createBooking]', () => {
     })
   })
 
-  it('throws AppError when given non-existent roomId', async () => {
+  it('throws AppError when given non-existent roomId', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testUser = await createTestUser()
     const bookingInfoNonExistRoomId = { 
       userId: testUser.id, 
@@ -251,9 +250,8 @@ describe('BookingRepository [createBooking]', () => {
 })
 
 describe('BookingRepository [deleteById]', () => {
-  it('returns true and update deleted_at to time it\'s deleted when given id', async () => {
+  it('returns true and update deleted_at to time it\'s deleted when given id', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testBooking = await createTestBookingWrapper()
 
     // Act
@@ -267,9 +265,8 @@ describe('BookingRepository [deleteById]', () => {
     expect(bookingInDb.is_deleted).toBe(true)
   })
 
-  it('returns false when given id of deleted booking', async () => {
+  it('returns false when given id of deleted booking', async({ bookingRepository }) => {
     // Arrange
-    const bookingRepository = new BookingRepository(query)
     const testBooking = await createTestBookingWrapper()
     await bookingRepository.deleteById(testBooking.id)
 
@@ -281,10 +278,9 @@ describe('BookingRepository [deleteById]', () => {
   })
 
   describe('BookingRepository [updateBooking]', () => {
-    it('returns new booking and updates booking in database', async () => {
+    it('returns new booking and updates booking in database', async({ bookingRepository }) => {
       // Arrange
-      const bookingRepository = new BookingRepository(query)
-      const testBooking = await createTestBookingWrapper()
+        const testBooking = await createTestBookingWrapper()
 
       const updateInfo = {
         check_out: addDay(Date.now(), 10).toISOString().split('T')[0],
@@ -303,10 +299,9 @@ describe('BookingRepository [deleteById]', () => {
       expect(bookingInDb.checkOutDate).toBe(updateInfo.checkOutDate)
     })
 
-    it('returns null when given non-existent id', async () => {
+    it('returns null when given non-existent id', async({ bookingRepository }) => {
       // Arrange
-      const bookingRepository = new BookingRepository(query)
-      const nonExistId = 1000
+        const nonExistId = 1000
       const updateInfo = {
         check_out: addDay(Date.now(), 10).toISOString().split('T')[0],
         status: 'completed'
