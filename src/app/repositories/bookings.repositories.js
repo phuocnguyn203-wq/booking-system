@@ -5,10 +5,10 @@ import { createDataAccessError } from '../errors/DataAccessError.js';
 async function mapRowToBooking(row) {
   return {
     id: Number(row.id),
-    user_id: Number(row.user_id),
-    room_id: Number(row.room_id),
-    check_in: row.check_in,
-    check_out: row.check_out
+    userId: Number(row.user_id),
+    roomId: Number(row.room_id),
+    checkInDate: row.check_in,
+    checkOutDate: row.check_out
   }
 }
 export class BookingRepository {
