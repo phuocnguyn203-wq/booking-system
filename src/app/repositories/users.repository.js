@@ -20,7 +20,7 @@ export default class UserRepository {
     try {
       const rowResult = await this.query(
         `
-        SELECT id, fullname, email FROM users
+        SELECT * FROM users
         WHERE id=$1 AND is_deleted=false
         `,
         [id]
@@ -51,13 +51,13 @@ export default class UserRepository {
 
     } catch (error) {
       switch (error.code){
-        case '23502': throw createAppError(Errors.NOT_NULL_VALIDATION); break;
-        case '23505': throw createAppError(Errors.UNIQUE_VALIDATION); break;
-        case '23514': throw createAppError(Errors.EMAIL_VALIDATION); break;
+        case '23502': throw createAppError(Errors.NOT_NULL_VALIDATION);
+        case '23505': throw createAppError(Errors.UNIQUE_VALIDATION);
+        case '23514': throw createAppError(Errors.EMAIL_VALIDATION);
       }
 
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
       console.log(error)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }
 
@@ -97,6 +97,7 @@ export default class UserRepository {
       
       return rowResult.rowCount > 0
     } catch (error) {
+      console.log(error)
       throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
 
