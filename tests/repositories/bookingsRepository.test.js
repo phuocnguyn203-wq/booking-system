@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterAll, test } from 'vitest'
+import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { query } from '../../src/database/index.js'
-import { mapRowToBooking, BookingRepository } from '../../src/app/repositories/bookings.repository.js'
+import BookingRepository from '../../src/app/repositories/bookings.repository.js'
+import { mapRowToBooking } from '../../src/app/repositories/bookings.repository.js'
 
 const CLEAN_QUERY = `
   DELETE FROM bookings;

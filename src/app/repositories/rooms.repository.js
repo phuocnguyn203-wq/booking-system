@@ -10,7 +10,7 @@ function mapRowToRoom(row) {
     created_at: row.created_at,
   };
 }
-export class RoomRepository {
+export default class RoomRepository {
   constructor(query) {
     this.query = query;
   }

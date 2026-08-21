@@ -1,4 +1,3 @@
-import { query } from '../../database/index.js'
 import { createAppError } from '../errors/AppError.js'
 import { createDataAccessError } from '../errors/DataAccessError.js'
 import { Errors } from '../errors/errorDefinitions.js'
@@ -15,7 +14,7 @@ function mapRowToUser(userRow) {
   }
 }
 
-export class UserRepository {
+export default class UserRepository {
   constructor(query) {
     this.query = query
   }
@@ -81,7 +80,7 @@ export class UserRepository {
     })
     values.push(id)
 
-    const rowResult = await query(
+    const rowResult = await this.query(
     `
     UPDATE users SET ${setClause.join(', ')}
     WHERE id=$${values.length}

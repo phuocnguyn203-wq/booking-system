@@ -1,6 +1,6 @@
 import { it, beforeEach, afterAll, expect, describe } from "vitest";
 
-import { RoomRepository } from "../../src/app/repositories/rooms.repository.js";
+import RoomRepository from "../../src/app/repositories/rooms.repository.js";
 import { query } from "../../src/database/index.js";
 
 

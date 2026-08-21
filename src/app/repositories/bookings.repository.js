@@ -12,7 +12,7 @@ export function mapRowToBooking(row) {
     status: row.status
   }
 }
-export class BookingRepository {
+export default class BookingRepository {
   constructor(query) {
     this.query = query
   }
