@@ -20,7 +20,7 @@ export default class RoomRepository {
         `
         SELECT id, name, price_per_night, created_at
         FROM rooms
-        WHERE id=$1
+        WHERE id=$1 AND is_deleted=false
         `,
         [id]
       )
@@ -63,7 +63,7 @@ export default class RoomRepository {
         `,
         [id]
       )
-      return result.rowCount === 1
+      return result.rowCount > 0
     } catch (error) {
       throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
@@ -95,7 +95,7 @@ export default class RoomRepository {
     const query = `
       UPDATE rooms
       SET ${setClause.join(', ')}
-      WHERE id = $${values.length}
+      WHERE id = $${values.length} AND is_deleted=false
       RETURNING *;
     `
     const result = await this.query(query, values)

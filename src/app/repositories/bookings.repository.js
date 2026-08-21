@@ -21,7 +21,7 @@ export default class BookingRepository {
       const rowResult = await this.query(
         `
         SELECT id, user_id, room_id, check_in, check_out, status
-        FROM bookings WHERE id=$1
+        FROM bookings WHERE id=$1 AND is_deleted=false
         `,
         [id]
       )

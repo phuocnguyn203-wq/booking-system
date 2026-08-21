@@ -21,7 +21,7 @@ export default class UserRepository {
       const rowResult = await this.query(
         `
         SELECT id, fullname, email FROM users
-        WHERE id=$1
+        WHERE id=$1 AND is_deleted=false
         `,
         [id]
       )
@@ -80,7 +80,7 @@ export default class UserRepository {
     const rowResult = await this.query(
     `
     UPDATE users SET ${setClause.join(', ')}
-    WHERE id=$${values.length}
+    WHERE id=$${values.length} AND is_deleted=false
     RETURNING *
     `,
     values
@@ -95,7 +95,7 @@ export default class UserRepository {
     try{
       const rowResult = await this.query(`UPDATE users SET is_deleted=true WHERE id=$1 AND is_deleted=false`, [id])
       
-      return rowResult.rowCount
+      return rowResult.rowCount > 0
     } catch (error) {
       throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
     }
