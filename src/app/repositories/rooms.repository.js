@@ -58,8 +58,8 @@ export default class RoomRepository {
     try {
       const result = await this.query(
         `
-        UPDATE rooms SET deleted_at=NOW()
-        WHERE id=$1 AND deleted_at IS NULL
+        UPDATE rooms SET is_deleted=true
+        WHERE id=$1 AND is_deleted IS false
         `,
         [id]
       )

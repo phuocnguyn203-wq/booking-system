@@ -40,6 +40,17 @@ describe('RoomRepository [findById]', () => {
     // Assert
     expect(nonExistRoom).toBeNull()
   })
+
+  it('returns null when given deleted room id', async({ roomRepository }) => {
+    // Arrange
+    const testRoom = await createTestRoom({ isDeleted: true })
+
+    // Act
+    const room = await roomRepository.findById(testRoom.id)
+
+    // Assert
+    expect(room).toBeNull()
+  })
 })
 
 describe('RoomRepository [createRoom]', () => {
@@ -91,20 +102,20 @@ describe('RoomRepository [createRoom]', () => {
 })
 
 describe('Room Repository [deleteById]', () => {
-  it('soft deletes and returns true if it\'s soft deleted when given room id', async({ roomRepository }) => {
+  it('soft deletes and returns true when given room id', async({ roomRepository }) => {
     // Arrange
     const testRoom = await createTestRoom({})
 
     // Act
-    const is_deleted = roomRepository.deleteById(testRoom.id)
+    const is_deleted = await roomRepository.deleteById(testRoom.id)
 
     // Assert
-    await expect(is_deleted).resolves.toBe(true)
+    expect(is_deleted).toBe(true)
     // Assert side effect
     const rowResult = await query(
       `
       SELECT id FROM rooms
-      WHERE id=$1 AND deleted_at IS NOT NULL
+      WHERE id=$1 AND is_deleted=true
       `,
       [testRoom.id]
     )
@@ -113,13 +124,13 @@ describe('Room Repository [deleteById]', () => {
 
   it('returns false if it\'s already soft deleted or deleted permanently when given room id', async({ roomRepository }) => {
     // Arrange
-    const testRoom = await createTestRoom({ deleted_at:'now' })
+    const testRoom = await createTestRoom({ isDeleted: true })
 
     // Act
     const is_deleted = await roomRepository.deleteById(testRoom.id)
 
     // Assert
-    await expect(is_deleted).toBe(false)
+    expect(is_deleted).toBe(false)
   })
 })
 

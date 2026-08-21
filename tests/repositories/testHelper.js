@@ -16,37 +16,25 @@ export async function cleanBeforeEachAndAfterAll() {
   })
 }
 
-export async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=null } = {}) {
-  let result
-  if (deleted_at === 'now'){
-    result = await query(
-      `
-      INSERT INTO rooms (name, price_per_night, deleted_at)
-      VALUES
-      ($1, $2, NOW())
-      RETURNING *;
-      `,
-      [name, pricePerNight],
-    )
-  } else {
-    result = await query(
-      `
-      INSERT INTO rooms (name, price_per_night)
-      VALUES
-      ($1, $2)
-      RETURNING *;
-      `,
-      [name, pricePerNight],
-    )
-  }
+export async function createTestRoom({ name="Room 1", pricePerNight=200, isDeleted=false } = {}) {
+
+  const result = await query(
+    `
+    INSERT INTO rooms (name, price_per_night, is_deleted)
+    VALUES
+    ($1, $2, $3)
+    RETURNING *;
+    `,
+    [name, pricePerNight, isDeleted],
+  )
 
   const room = result.rows[0]
   return {
     id: Number(room.id),
     name: room.name,
     pricePerNight: Number(room.price_per_night),
-    created_at: Date(room.created_at),
-    deleted_at: Date(room.deleted_at),
+    createdAt: Date(room.created_at),
+    isDeleted: room.is_deleted,
   }
 }
 
@@ -82,16 +70,17 @@ export async function createTestBooking({
   roomId, 
   checkInDate = new Date(Date.now() - 24 * 60 * 60 * 1000), 
   checkOutDate = new Date(Date.now()),
-  status = 'completed'
+  status = 'completed',
+  isDeleted = false
 }) {
   const rowResult = await query(
     `
-    INSERT INTO bookings (user_id, room_id, check_in, check_out, status)
+    INSERT INTO bookings (user_id, room_id, check_in, check_out, status, is_deleted)
     VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4, $5, $6)
     RETURNING *
     `,
-    [userId, roomId, checkInDate, checkOutDate, status]
+    [userId, roomId, checkInDate, checkOutDate, status, isDeleted]
   )
 
   const booking = rowResult.rows[0]
@@ -108,7 +97,8 @@ export async function createTestBooking({
 export async function createTestBookingWrapper({ 
   check_in=new Date(Date.now() - 24 * 60 * 60 * 1000), 
   check_out=new Date(), 
-  status= 'cancelled'
+  status='cancelled',
+  isDeleted=false
 }={}) {
   const testRoom = await createTestRoom()
   const testUser = await createTestUser()
@@ -117,7 +107,8 @@ export async function createTestBookingWrapper({
     roomId: testRoom.id,
     checkInDate: check_in,
     checkOutDate: check_out,
-    status: status
+    status: status,
+    isDeleted: isDeleted
   })
 
   return booking

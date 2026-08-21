@@ -42,6 +42,17 @@ describe('BookingRepository [getById]', () => {
     // Assert
     expect(booking).toBeNull()
   })
+
+  it('returns null when given deleted booking id', async({ bookingRepository }) => {
+    // Arrange
+    const bookingTest = await createTestBookingWrapper({ isDeleted: true })
+
+    // Act
+    const booking = await bookingRepository.getById(bookingTest.id)
+
+    // Assert
+    expect(booking).toBeNull()
+  })
 })
 
 describe('BookingRepository [createBooking]', () => {

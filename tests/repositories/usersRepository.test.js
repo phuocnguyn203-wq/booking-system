@@ -34,6 +34,17 @@ describe('UserRepository [getById]', () => {
     // Assert
     expect(user).toBeNull()
   })
+
+  it('returns null when given deleted user id', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ isDeleted: true })
+
+    // Act
+    const user = await userRepository.findById(testUser.id)
+
+    // Assert
+    expect(user).toBeNull()
+  })
 })
 
 describe('UserRepository [createUser]', () => {
@@ -198,10 +209,10 @@ describe('UserRepository [deleteUser]', () => {
     const testUser = await createTestUser()
 
     // Act
-    const rowAffected = await userRepository.deleteUser(testUser.id)
+    const isDeleted = await userRepository.deleteUser(testUser.id)
 
     // Assert
-    expect(rowAffected).toBe(1)
+    expect(isDeleted).toBe(true)
     // Assert side effect
     const rowResult = await query(`SELECT id FROM users WHERE id=$1 AND is_deleted=true`, [testUser.id])
     expect(rowResult.rows.length).toBe(1)
@@ -212,9 +223,9 @@ describe('UserRepository [deleteUser]', () => {
     const testUser = await createTestUser({ isDeleted: true })
 
     // Act
-    const rowAffected = await userRepository.deleteUser(testUser.id)
+    const isDeleted = await userRepository.deleteUser(testUser.id)
 
     // Assert
-    expect(rowAffected).toBe(0)
+    expect(isDeleted).toBe(false)
   })
 })
