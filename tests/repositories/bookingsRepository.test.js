@@ -40,7 +40,7 @@ async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=nul
 
   const room = result.rows[0]
   return {
-    id: room.id,
+    id: Number(room.id),
     name: room.name,
     pricePerNight: Number(room.price_per_night),
     created_at: Date(room.created_at),
@@ -66,7 +66,7 @@ async function createTestUser({
 
   const user = rowResult.rows[0]
   return {
-    id: parseInt(user.id, 10),
+    id: Number(user.id),
     email: user.email,
     fullname: user.fullname,
     username: user.username,
@@ -94,9 +94,9 @@ async function createTestBooking({
 
   const booking = rowResult.rows[0]
   return {
-    id: parseInt(booking.id, 10),
-    userId: parseInt(booking.user_id, 10),
-    roomId: parseInt(booking.room_id, 10),
+    id: Number(booking.id),
+    userId: Number(booking.user_id),
+    roomId: Number(booking.room_id),
     checkInDate: booking.check_in,
     checkOutDate: booking.check_out
   }
@@ -122,7 +122,7 @@ async function createTestBookingWrapper({
 }
 
 function addDay(date, days) {
-  return new Date(date.now() * days * 24 * 60 * 60 * 1000)
+  return new Date(date + days * 24 * 60 * 60 * 1000)
 }
 
 describe('BookingRepository [getById]', () => {
@@ -160,8 +160,9 @@ describe('BookingRepository [createBooking]', () => {
     const bookingInfo = {
       userId: testUser.id,
       roomId: testRoom.id,
-      checkInDate: addDay(Date.now(), 1),
-      checkOutDate: addDay(Date.now(), 3)
+      checkInDate: addDay(Date.now(), 1).toISOString().split('T')[0],
+      checkOutDate: addDay(Date.now(), 3).toISOString().split('T')[0],
+      status: 'pending'
     }
 
     // Act
@@ -171,8 +172,7 @@ describe('BookingRepository [createBooking]', () => {
     expect(booking).toMatchObject(bookingInfo)
     // Assert side effect
     const rowResult = await query(`SELECT * FROM bookings where id=$1`, [booking.id])
-    const bookingInDb = rowResult.rows[0]
-    expect (mapRowToBooking(bookingInDb)).toMatchObject(booking)
+    expect (mapRowToBooking(rowResult.rows[0])).toMatchObject(bookingInfo)
   })
 
   it('throws AppError and does not insert into database when given checkOutDate earlier than checkInDate', async () => {
@@ -184,7 +184,8 @@ describe('BookingRepository [createBooking]', () => {
       userId: testUser.id,
       roomId: testRoom.id,
       checkInDate: new Date(),
-      checkOutDate: addDay(Date.now(), -1)
+      checkOutDate: addDay(Date.now(), -1),
+      status: 'pending'
     }
 
     // Act
@@ -207,7 +208,13 @@ describe('BookingRepository [createBooking]', () => {
     // Arrange
     const bookingRepository = new BookingRepository(query)
     const testRoom = await createTestRoom()
-    const bookingInfoNonExistUserId = { userId: 1, roomId: testRoom.id, checkInDate: Date.now(), checkOutDate: addDay(Date.now(), 1) }
+    const bookingInfoNonExistUserId = {
+      userId: 1, 
+      roomId: testRoom.id, 
+      checkInDate: new Date(), 
+      checkOutDate: addDay(Date.now(), 1),
+      status: 'pending'
+    }
 
     // Act
     const bookingNonExistUserId = bookingRepository.createBooking(bookingInfoNonExistUserId)
@@ -222,8 +229,14 @@ describe('BookingRepository [createBooking]', () => {
   it('throws AppError when given non-existent roomId', async () => {
     // Arrange
     const bookingRepository = new BookingRepository(query)
-    const testUser = await createTestRoom()
-    const bookingInfoNonExistRoomId = { userId: testUser.id, roomId: 1, checkInDate: Date.now(), checkOutDate: addDay(Date.now(), 1) }
+    const testUser = await createTestUser()
+    const bookingInfoNonExistRoomId = { 
+      userId: testUser.id, 
+      roomId: 1, 
+      checkInDate: new Date(), 
+      checkOutDate: addDay(Date.now(), 1),
+      status: 'pending' 
+    }
 
     // Act
     const bookingNonExistRoomId = bookingRepository.createBooking(bookingInfoNonExistRoomId)
