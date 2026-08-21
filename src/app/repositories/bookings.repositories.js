@@ -86,4 +86,37 @@ export class BookingRepository {
       throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
     }
   }
+
+  async updateBooking(id, updateInfo) {
+    const allowedFields = new Set([
+      'check_in', 'check_out', 'status'
+    ])
+
+    const entries = Object.entries(updateInfo).filter(
+      ([key, value]) => allowedFields.has(key) && value !== undefined
+    )
+
+    if (entries.length===0)
+      throw createAppError(Errors.NO_VALID_FIELDS)
+
+    const values = []
+    const setClause = entries.map(([key, value]) => {
+      values.push(value)
+      return `${key}=$${values.length}`
+    })
+    values.push(id)
+
+    const rowResult = await this.query(
+      `
+      UPDATE bookings SET ${setClause.join(', ')}
+      WHERE id=$${values.length} AND is_deleted=false
+      RETURNING *;
+      `,
+      values
+    )
+
+    if (rowResult.rows.length === 0)
+      return null
+    return rowResult.rows[0]
+  }
 }
