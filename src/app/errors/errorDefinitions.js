@@ -28,5 +28,25 @@ export const Errors = {
     statusCode: 400,
     code: 'NO_VALID_FIELDS',
     message: 'Field names are not correct.'
+  },
+  INVALID_DATE: {
+    statusCode: 400,
+    code: 'INVALID_DATE',
+    message: 'Check out date can\'t be earlier than check in date'
+  },
+  INVALID_STATE: {
+    statusCOde: 400,
+    code: 'INVALID_STATE',
+    message: 'State must be either pending or completed or cancelled'
+  },
+  ROOM_NON_EXISTENT: {
+    statusCode: 400,
+    code: 'ROOM_NON_EXISTENT',
+    message: 'Room does not exist'
+  },
+  USER_NON_EXISTENT: {
+    statusCode: 400,
+    code: 'USER_NON_EXISTENT',
+    message: 'User does not exist'
   }
 }
