@@ -97,7 +97,7 @@ export default class UserRepository {
       
       return rowResult.rowCount > 0
     } catch (error) {
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
 
   }
