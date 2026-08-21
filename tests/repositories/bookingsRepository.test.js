@@ -1,6 +1,7 @@
 import { describe, expect, beforeEach, afterAll } from 'vitest'
 import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
+import { cleanBeforeEachAndAfterAll } from './testHelper.js'
 import BookingRepository from '../../src/app/repositories/bookings.repository.js'
 import { mapRowToBooking } from '../../src/app/repositories/bookings.repository.js'
 
@@ -8,17 +9,7 @@ const it = baseIt.extend('bookingRepository', () => {
   return new BookingRepository(query)
 })
 
-const CLEAN_QUERY = `
-  DELETE FROM bookings;
-  DELETE FROM users;
-  DELETE FROM rooms;
-`
-beforeEach(async () => {
-  await query(CLEAN_QUERY)
-})
-afterAll(async() => {
-  await query(CLEAN_QUERY)
-})
+await cleanBeforeEachAndAfterAll()
 
 async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=null } = {}) {
   let result

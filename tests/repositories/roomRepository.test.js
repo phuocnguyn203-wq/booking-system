@@ -1,27 +1,15 @@
 import { beforeEach, afterAll, expect, describe } from "vitest";
 import { it as baseIt } from 'vitest'
+import { query } from "../../src/database/index.js"
+import { cleanBeforeEachAndAfterAll } from "./testHelper.js";
 import RoomRepository from "../../src/app/repositories/rooms.repository.js";
-import { query } from "../../src/database/index.js";
+
+await cleanBeforeEachAndAfterAll()
 
 const it = baseIt.extend('roomRepository', () => {
   return new RoomRepository(query)
 })
 
-beforeEach(async() => {
-  await query(`
-    DELETE FROM users;
-    DELETE FROM rooms;
-    DELETE FROM bookings;
-    `);
-});
-
-afterAll(async() => {
-  await query(`
-    DELETE FROM users;
-    DELETE FROM rooms;
-    DELETE FROM bookings;
-    `)
-})
 /*
 Room obj:
 - id

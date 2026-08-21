@@ -1,25 +1,14 @@
 import { describe, afterAll, beforeEach, expect } from 'vitest'
 import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
+import { cleanBeforeEachAndAfterAll } from './testHelper.js'
 import UserRepository from '../../src/app/repositories/users.repository.js'
 
 const it = baseIt.extend('userRepository', () => {
   return new UserRepository(query)
 })
 
-const CLEAN_QUERY = `
-  DELETE FROM bookings;
-  DELETE FROM users;
-  DELETE FROM rooms;
-`
-
-beforeEach(async () => {
-  await query(CLEAN_QUERY)
-})
-
-afterAll(async() => {
-  await query(CLEAN_QUERY)
-})
+await cleanBeforeEachAndAfterAll()
 
 async function createTestUser({ 
   email='testUser@gmail.com', 
