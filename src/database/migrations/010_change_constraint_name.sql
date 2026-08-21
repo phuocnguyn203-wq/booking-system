@@ -1,0 +1,1 @@
+ALTER TABLE bookings RENAME CONSTRAINT boookings_room_fk TO bookings_room_fk
