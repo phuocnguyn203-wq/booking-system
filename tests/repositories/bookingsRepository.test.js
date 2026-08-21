@@ -248,3 +248,34 @@ describe('BookingRepository [createBooking]', () => {
     })
   })
 })
+
+describe('BookingRepository [deleteById]', () => {
+  it('returns true and update is_deleted to true when given id', async () => {
+    // Arrange
+    const bookingRepository = new BookingRepository(query)
+    const testBooking = await createTestBookingWrapper()
+
+    // Act
+    const is_deleted = await bookingRepository.deleteById(testBooking.id)
+
+    // Assert
+    expect(is_deleted).toBe(true)
+    // Assert side effect
+    const rowResult = await query(`SELECT id, is_deleted FROM bookings WHERE id=$1`, [testBooking.id])
+    const bookingInDb = rowResult.rows[0]
+    expect(bookingInDb.is_deleted).toBe(true)
+  })
+
+  it('returns false when given id of deleted booking', async () => {
+    // Arrange
+    const bookingRepository = new BookingRepository(query)
+    const testBooking = await createTestBookingWrapper()
+    await bookingRepository.deleteById(testBooking.id)
+
+    // Act
+    const is_deleted = bookingRepository.deleteById(testBooking.id)
+
+    // Assert
+    expect(is_deleted).toBe(false)
+  })
+})
