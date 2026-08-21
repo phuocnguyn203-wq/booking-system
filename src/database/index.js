@@ -1,4 +1,8 @@
-import { Pool } from 'pg';
+import pg from 'pg';
+
+const { Pool, types } = pg;
+
+types.setTypeParser(types.builtins.DATE, value => value);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
