@@ -4,7 +4,7 @@ import { createDataAccessError } from '../errors/DataAccessError.js';
 
 function mapRowToRoom(row) {
   return {
-    id: row.id,
+    id: Number(row.id),
     name: row.name,
     pricePerNight: Number(row.price_per_night),
     created_at: row.created_at,

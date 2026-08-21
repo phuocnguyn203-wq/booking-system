@@ -1,7 +1,7 @@
 import { beforeEach, afterAll, expect, describe } from "vitest";
 import { it as baseIt } from 'vitest'
 import { query } from "../../src/database/index.js"
-import { cleanBeforeEachAndAfterAll } from "./testHelper.js";
+import { cleanBeforeEachAndAfterAll, createTestRoom } from "./testHelper.js";
 import RoomRepository from "../../src/app/repositories/rooms.repository.js";
 
 await cleanBeforeEachAndAfterAll()
@@ -17,39 +17,6 @@ Room obj:
 - price_per_night
 - created_at
 */
-async function createTestRoom({ name="Room 1", pricePerNight=200, deleted_at=null } = {}) {
-  let result
-  if (deleted_at === 'now'){
-    result = await query(
-      `
-      INSERT INTO rooms (name, price_per_night, deleted_at)
-      VALUES
-      ($1, $2, NOW())
-      RETURNING *;
-      `,
-      [name, pricePerNight],
-    )
-  } else {
-    result = await query(
-      `
-      INSERT INTO rooms (name, price_per_night)
-      VALUES
-      ($1, $2)
-      RETURNING *;
-      `,
-      [name, pricePerNight],
-    )
-  }
-
-  const room = result.rows[0]
-  return {
-    id: room.id,
-    name: room.name,
-    pricePerNight: Number(room.price_per_night),
-    created_at: Date(room.created_at),
-    deleted_at: Date(room.deleted_at),
-  }
-}
 
 describe('RoomRepository [findById]', () => {
   it('returns room object when given existed room id', async ({ roomRepository }) => {

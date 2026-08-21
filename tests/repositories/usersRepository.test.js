@@ -1,7 +1,7 @@
 import { describe, afterAll, beforeEach, expect } from 'vitest'
 import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
-import { cleanBeforeEachAndAfterAll } from './testHelper.js'
+import { cleanBeforeEachAndAfterAll, createTestUser } from './testHelper.js'
 import UserRepository from '../../src/app/repositories/users.repository.js'
 
 const it = baseIt.extend('userRepository', () => {
@@ -9,33 +9,6 @@ const it = baseIt.extend('userRepository', () => {
 })
 
 await cleanBeforeEachAndAfterAll()
-
-async function createTestUser({ 
-  email='testUser@gmail.com', 
-  fullname='Tester User',
-  username='tester1',
-  hashedPassword='fake-hashed-password',
-  isDeleted=false
- } = {}) {
-  const rowResult = await query(`
-    INSERT INTO users (email, fullname, username, hashed_password, is_deleted)
-    VALUES
-    ($1, $2, $3, $4, $5)
-    RETURNING *
-    `,
-    [email, fullname, username, hashedPassword, isDeleted]
-  )
-
-  const user = rowResult.rows[0]
-  return {
-    id: parseInt(user.id, 10),
-    email: user.email,
-    fullname: user.fullname,
-    username: user.username,
-    hashedPassword: user.hashedPassword,
-    isDeleted: user.isDeleted
-  }
-}
 
 describe('UserRepository [getById]', () => {
   it('returns user when given id', async ({ userRepository }) => {
