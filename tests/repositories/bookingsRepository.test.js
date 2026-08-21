@@ -261,9 +261,9 @@ describe('BookingRepository [deleteById]', () => {
     // Assert
     expect(is_deleted).toBe(true)
     // Assert side effect
-    const rowResult = await query(`SELECT id, deleted_at FROM bookings WHERE id=$1`, [testBooking.id])
+    const rowResult = await query(`SELECT id, is_deleted FROM bookings WHERE id=$1`, [testBooking.id])
     const bookingInDb = rowResult.rows[0]
-    expect(bookingInDb.deleted_at).not.toBeNull()
+    expect(bookingInDb.is_deleted).toBe(true)
   })
 
   it('returns false when given id of deleted booking', async () => {

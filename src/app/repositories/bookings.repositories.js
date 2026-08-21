@@ -75,7 +75,8 @@ export class BookingRepository {
     try {
       const rowResult = await this.query(
         `
-        DELETE FROM bookings WHERE id=$1 AND deleted_at IS NULL
+        UPDATE bookings SET is_deleted=true 
+        WHERE id=$1 AND (is_deleted IS NULL OR is_deleted IS false) 
         `,
         [id]
       )
