@@ -1,4 +1,4 @@
-export default class AppError extends Error {
+export class AppError extends Error {
   constructor(message, statusCode, code) {
     super(message)
     this.statusCode= statusCode
@@ -6,7 +6,7 @@ export default class AppError extends Error {
   }
 }
 
-export function createAppError(error) {
+export default function createAppError(error) {
   return new AppError(error.message, error.statusCode, error.code)
 }
 

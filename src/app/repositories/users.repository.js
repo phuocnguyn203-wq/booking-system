@@ -1,8 +1,5 @@
-import { createAppError } from '../errors/AppError.js'
-import { createDataAccessError } from '../errors/DataAccessError.js'
-import { Errors } from '../errors/errorDefinitions.js'
-
-import { createDataAccessError } from '../errors/DataAccessError.js'
+import createAppError from '../errors/AppError.js'
+import Errors from '../errors/errorDefinitions.js'
 
 function mapRowToUser(userRow) {
   return {
@@ -34,7 +31,7 @@ export default class UserRepository {
       return mapRowToUser(rowResult.rows[0])
 
     } catch (error) {
-      throw createDataAccessError(error)
+      throw createAppError(error)
     }
   }
 
@@ -59,7 +56,7 @@ export default class UserRepository {
         case '23514': throw createAppError(Errors.EMAIL_VALIDATION); break;
       }
 
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
       console.log(error)
     }
   }

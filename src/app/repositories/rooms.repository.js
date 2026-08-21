@@ -1,6 +1,5 @@
-import { Errors } from '../errors/errorDefinitions.js';
-import { createAppError } from '../errors/AppError.js';
-import { createDataAccessError } from '../errors/DataAccessError.js';
+import Errors from '../errors/errorDefinitions.js';
+import createAppError from '../errors/AppError.js';
 
 function mapRowToRoom(row) {
   return {
@@ -30,7 +29,7 @@ export default class RoomRepository {
 
       return mapRowToRoom(result.rows[0])
     } catch (error) {
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
     
   }
@@ -51,7 +50,7 @@ export default class RoomRepository {
     } catch (error) {
       if (error.code === '23505')
         throw createAppError(Errors.ROOM_ALREADY_EXISTS)
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }
 
@@ -81,7 +80,6 @@ export default class RoomRepository {
     )
 
     if (entries.length === 0)
-      //TODO Make NO_VALID_FIELDS attribute in errorDefinitions
       throw createAppError(Errors.NO_VALID_FIELDS)
     
     const values = []

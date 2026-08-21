@@ -1,4 +1,4 @@
-export const Errors = {
+const Errors = {
   ROOM_ALREADY_EXISTS: {
     statusCode: 409,
     code: 'ROOM_ALREADY_EXISTS',
@@ -50,3 +50,5 @@ export const Errors = {
     message: 'User does not exist'
   }
 }
+
+export default Errors

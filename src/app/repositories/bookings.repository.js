@@ -1,6 +1,5 @@
-import { Errors } from '../errors/errorDefinitions.js';
-import { createAppError } from '../errors/AppError.js';
-import { createDataAccessError } from '../errors/DataAccessError.js';
+import Errors from '../errors/errorDefinitions.js';
+import createAppError from '../errors/AppError.js';
 
 export function mapRowToBooking(row) {
   return {
@@ -31,7 +30,7 @@ export default class BookingRepository {
         return null
       return mapRowToBooking(rowResult.rows[0])
     } catch (error) {
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }
 
@@ -66,7 +65,7 @@ export default class BookingRepository {
 
       // DATABASE ERROR
       console.log(error)
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
 
   }
@@ -83,7 +82,7 @@ export default class BookingRepository {
       return rowResult.rowCount > 0
     } catch (error) {
       console.log(error)
-      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }
 

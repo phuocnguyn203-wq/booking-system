@@ -1,4 +1,4 @@
-import { describe, afterAll, beforeEach, expect } from 'vitest'
+import { describe, expect } from 'vitest'
 import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
 import { cleanBeforeEachAndAfterAll, createTestUser } from './testHelper.js'
