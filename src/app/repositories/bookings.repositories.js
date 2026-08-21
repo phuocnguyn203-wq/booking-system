@@ -70,4 +70,19 @@ export class BookingRepository {
     }
 
   }
+  
+  async deleteById(id) {
+    try {
+      const rowResult = await this.query(
+        `
+        DELETE FROM bookings WHERE id=$1 AND deleted_at IS NULL
+        `,
+        [id]
+      )
+      return rowResult.rowCount > 0
+    } catch (error) {
+      console.log(error)
+      throw createDataAccessError(Errors.DATA_ACCESS_ERROR)
+    }
+  }
 }
