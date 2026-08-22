@@ -6,7 +6,7 @@ function mapRowToRoom(row) {
     id: Number(row.id),
     roomNumber: row.room_number,
     roomTypeId: Number(row.room_type_id),
-    floor: row.floor,
+    floor: Number(row.floor) || null,
     status: row.status,
     isDeleted: row.is_deleted,
   };
@@ -36,22 +36,33 @@ export default class RoomRepository {
     
   }
 
-  async createRoom({name, pricePerNight}) {
+  async createRoom(roomInfo) {
     try { 
+      const {
+        roomNumber,
+        roomTypeId,
+        floor,
+        status
+      } = roomInfo
+
       const result = await this.query(
         `
-        INSERT INTO rooms (name, price_per_night)
+        INSERT INTO rooms (room_number, room_type_id, floor, status)
         VALUES
-        ($1, $2)
+        ($1, $2, $3, $4)
         RETURNING *
         `,
-        [name, pricePerNight]
+        [roomNumber, roomTypeId, floor, status]
       )
 
       return mapRowToRoom(result.rows[0])
     } catch (error) {
-      if (error.code === '23505')
-        throw createAppError(Errors.ROOM_ALREADY_EXISTS)
+      if (error.code === '23502')
+        throw createAppError(Errors.NOT_NULL_VALIDATION)
+      if (error.code === '23503') // Foreign key violation, roomTypeId does not exist
+        throw createAppError(Errors.ROOM_TYPE_DOES_NOT_EXIST)
+      if (error.code === '23514') // Check violation, not valid status
+        throw createAppError(Errors.INVALID_STATUS_ROOM)
       throw createAppError(Errors.DATA_ACCESS_ERROR)
     }
   }

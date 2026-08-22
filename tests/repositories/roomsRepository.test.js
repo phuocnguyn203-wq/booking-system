@@ -60,6 +60,7 @@ describe('RoomRepository [createRoom]', () => {
     // Arrange
     const testRoomInfo = {
       roomNumber: 'TEST ROOM 50',
+      roomTypeId: (await createTestRoomType()).id,
       floor: 2,
       status: 'active',
     }
@@ -110,7 +111,7 @@ describe('RoomRepository [createRoom]', () => {
     })
   })
 
-  it('doesnot create and raises AppError when not given floor', async({ roomRepository }) => {
+  it('returns object that has null as floor and creates when not given floor', async({ roomRepository }) => {
     // Arrange
     const roomInfo = {
       roomNumber: 'TEST NUMBER 10',
@@ -119,12 +120,12 @@ describe('RoomRepository [createRoom]', () => {
     }
 
     //Act
-    const roomPromise = roomRepository.createRoom(roomInfo)
+    const roomPromise = await roomRepository.createRoom(roomInfo)
     
     // Assert
-    await expect(roomPromise).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Required fields are missing'
+    await expect(roomPromise).toMatchObject({
+      ...roomInfo,
+      floor: null
     })
   })
 
@@ -139,7 +140,7 @@ describe('RoomRepository [createRoom]', () => {
     }
 
     // Act
-    const room = roomRepository(roomInfo)
+    const room = roomRepository.createRoom(roomInfo)
 
     // Assert
     await expect(room).rejects.toMatchObject({
@@ -159,7 +160,7 @@ describe('RoomRepository [createRoom]', () => {
     }
 
     // Act
-    const room = roomRepository(roomInfo)
+    const room = roomRepository.createRoom(roomInfo)
 
     // Assert
     await expect(room).rejects.toMatchObject({

@@ -12,7 +12,17 @@ const Errors = {
   NOT_NULL_VALIDATION: {
     statusCode: 400,
     code: 'NOT_NULL_VALIDATION',
-    message: 'Required field is missing'
+    message: 'Required fields are missing'
+  },
+  ROOM_TYPE_DOES_NOT_EXIST: {
+    statusCode: 400,
+    code: 'ROOM_TYPE_DOES_NOT_EXIST',
+    message: 'Room type does not exist'
+  },
+  INVALID_STATUS_ROOM: {
+    statusCode: 400,
+    code: 'INVALID_STATUS_ROOM',
+    message: 'Invalid status room'
   },
   UNIQUE_VALIDATION: {
     statusCode: 409,
