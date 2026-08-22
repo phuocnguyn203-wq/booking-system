@@ -173,7 +173,7 @@ describe('RoomRepository [createRoom]', () => {
 describe('Room Repository [deleteById]', () => {
   it('soft deletes and returns true when given room id', async({ roomRepository }) => {
     // Arrange
-    const testRoom = await createTestRoom({})
+    const testRoom = await createTestRoom()
 
     // Act
     const is_deleted = await roomRepository.deleteById(testRoom.id)
