@@ -170,7 +170,7 @@ describe('RoomRepository [createRoom]', () => {
   })
 })
 
-describe('Room Repository [deleteById]', () => {
+describe('RoomRepository [deleteById]', () => {
   it('soft deletes and returns true when given room id', async({ roomRepository }) => {
     // Arrange
     const testRoom = await createTestRoom()
@@ -203,78 +203,55 @@ describe('Room Repository [deleteById]', () => {
   })
 })
 
-describe('Room Repository [updateRoom]', () => {
-  it('updates both name and pricePerNight when given new value', async({ roomRepository }) => {
+describe('RoomRepository [updateRoom]', () => {
+  it('updates status when given new value', async({ roomRepository }) => {
     // Arrange
-    const newName = 'New Name'
-    const newPricePerNight = 2948.10
-    const testRoom = await createTestRoom({ name: 'Old name', pricePerNight: 100.0 })
+    const newStatus = 'maintenance'
+    const testRoom = await createTestRoom()
 
     // Act
-    const newRoom = roomRepository.updateRoom(testRoom.id, { name: newName, price_per_night: newPricePerNight })
+    const newRoom = await roomRepository.updateRoom(testRoom.id, { status: newStatus })
 
     // Assert
-    await expect(newRoom).resolves.toEqual(
-      expect.objectContaining({
-        name: newName,
-        pricePerNight: newPricePerNight
-      })
-    )
+    expect(newRoom.status).toBe(newStatus)
     // Assert side effect
     const rowResult = await query(
       `
-      SELECT name, price_per_night FROM rooms
+      SELECT status FROM rooms
       WHERE id=$1
       `,
       [testRoom.id]
     )
     const newRoomInDb = rowResult.rows[0]
-    expect(newRoomInDb).toEqual(
-      expect.objectContaining({
-        name: newRoomInDb.name,
-        price_per_night: newRoomInDb.price_per_night
-      })
-    )
+    expect(newRoomInDb.status).toBe(newStatus)
   })
-  it('updates new name when given new name', async({ roomRepository }) => {
+  it('updates room number when given new room number', async({ roomRepository }) => {
     // Arrange
-    const newName = 'New Name'
-    const testRoom = await createTestRoom({ name: 'Old name' })
+    const newRoomNumber = 'Test Room 100'
+    const testRoom = await createTestRoom()
 
     // Act
-    const newRoom = await roomRepository.updateRoom(testRoom.id, { name: newName })
+    const newRoom = await roomRepository.updateRoom(testRoom.id, { room_number: newRoomNumber })
 
     // Assert
-    expect(newRoom.name).toBe(newName)
+    expect(newRoom.roomNumber).toBe(newRoomNumber)
     //Assert side effect
-    const rowResult = await query(
-      `
-      SELECT name FROM rooms
-      WHERE id=$1
-      `,
-      [testRoom.id]
-    )
-    expect(rowResult.rows[0].name).toBe(newName)
+    const rowResult = await query(`SELECT name FROM rooms WHERE id=$1`, [testRoom.id])
+    expect(rowResult.rows[0].roomNumber).toBe(newRoomNumber)
   })
 
-  it('updates new pricePerNight when given new pricePerNight', async({ roomRepository }) => {
+  it('updates room type id when given new room type id', async({ roomRepository }) => {
     // Arrange
-    const pricePerNight = 1000.0
-    const testRoom = await createTestRoom({ pricePerNight })
+    const newRoomTypeId = (await createTestRoomType()).id
+    const testRoom = await createTestRoom()
 
     // Act
-    const newRoom = await roomRepository.updateRoom(testRoom.id, { price_per_night: pricePerNight })
+    const newRoom = await roomRepository.updateRoom(testRoom.id, { room_type_id: newRoomTypeId })
 
     // Assert
-    expect(newRoom.pricePerNight).toBe(pricePerNight)
+    expect(newRoom.roomTypeId).toBe(newRoomTypeId)
     //Assert side effect
-    const rowResult = await query(
-      `
-      SELECT price_per_night FROM rooms
-      WHERE id=$1
-      `,
-      [testRoom.id]
-    )
-    expect(Number(rowResult.rows[0].price_per_night)).toBe(pricePerNight)
+    const rowResult = await query(`SELECT price_per_night FROM rooms WHERE id=$1`, [testRoom.id])
+    expect(Number(rowResult.rows[0].room_type_id)).toBe(newRoomTypeId)
   })
 })
