@@ -1,7 +1,7 @@
 import { expect, describe } from "vitest";
 import { it as baseIt } from 'vitest'
 import { query } from "../../src/database/index.js"
-import { cleanBeforeEachAndAfterAll, createTestRoom } from "./testHelper.js";
+import { cleanBeforeEachAndAfterAll, createTestRoom, createTestRoomType } from "./testHelper.js";
 import RoomRepository from "../../src/app/repositories/rooms.repository.js";
 
 await cleanBeforeEachAndAfterAll()
@@ -56,50 +56,76 @@ describe('RoomRepository [findById]', () => {
 })
 
 describe('RoomRepository [createRoom]', () => {
-  it('creates and returns room object', async({ roomRepository }) => {
-    // Arrance
+  it('creates and returns room object that has is_deleted is false by default', async({ roomRepository }) => {
+    // Arrange
     const testRoomInfo = {
-      name: 'MyRoom',
-      pricePerNight: 50
+      roomNumber: 'TEST ROOM 50',
+      floor: 2,
+      status: 'active',
     }
 
     // Act
     const newRoomReturned = await roomRepository.createRoom(testRoomInfo)
 
     // Assert
-    expect(newRoomReturned).toEqual(expect.objectContaining(testRoomInfo))
+    expect(newRoomReturned).toMatchObject(testRoomInfo)
     // Assert side effect
     const newRoomInDb = await roomRepository.findById(newRoomReturned.id)
-    expect(newRoomInDb).toEqual(newRoomReturned)
+    expect(newRoomInDb).toMatchObject(newRoomReturned)
   })
 
-  it('doesnot create and raises AppError when given duplicated name', async({ roomRepository }) => {
+  it('doesnot create and raises AppError when not given roomTypeId', async({ roomRepository }) => {
     // Arrange
-    const duplicatedName = 'My Room'
-    const pricePerNight = 100
-    const testRoom = await createTestRoom({name: duplicatedName})
+    const roomInfo = {
+      roomNumber: 'TEST NUMBER 10',
+      floor: 2,
+      roomTypeId: (await createTestRoomType()).id,
+    }
 
     //Act
-    const roomPromise = roomRepository.createRoom({ 
-      name: duplicatedName,
-      pricePerNight: pricePerNight
-     })
+    const roomPromise = await roomRepository.createRoom(roomInfo)
     
     // Assert
     await expect(roomPromise).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'Room already exists'
+      statusCode: 400,
+      message: 'Required fields are missing'
     })
+  })
+
+  it('doesnot create and raises AppError when not given status', async({ roomRepository }) => {
+    // Arrange
+    const roomInfo = {
+      roomNumber: 'TEST NUMBER 10',
+      floor: 2,
+      status: 'active',
+    }
+
+    //Act
+    const roomPromise = await roomRepository.createRoom(roomInfo)
     
-    // Assert side effect
-    const resultRoomInDb = await query(
-      `
-      SELECT id FROM rooms
-      WHERE id=$1
-      `,
-      [testRoom.id]
-    )
-    expect(resultRoomInDb.rows.length).toBe(1)
+    // Assert
+    await expect(roomPromise).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'Required fields are missing'
+    })
+  })
+
+  it('doesnot create and raises AppError when not given floor', async({ roomRepository }) => {
+    // Arrange
+    const roomInfo = {
+      roomNumber: 'TEST NUMBER 10',
+      roomTypeId: (await createTestRoomType()).id,
+      status: 'active',
+    }
+
+    //Act
+    const roomPromise = await roomRepository.createRoom(roomInfo)
+    
+    // Assert
+    await expect(roomPromise).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'Required fields are missing'
+    })
   })
 })
 

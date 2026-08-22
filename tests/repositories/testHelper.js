@@ -20,7 +20,7 @@ export async function cleanBeforeEachAndAfterAll() {
 let roomTypeSequence = 0
 let roomSequence = 0
 
-async function createTestRoomType(overrides={}) {
+export async function createTestRoomType(overrides={}) {
   const sequence = ++roomSequence
 
   const roomType = {
