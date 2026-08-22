@@ -236,8 +236,8 @@ describe('RoomRepository [updateRoom]', () => {
     // Assert
     expect(newRoom.roomNumber).toBe(newRoomNumber)
     //Assert side effect
-    const rowResult = await query(`SELECT name FROM rooms WHERE id=$1`, [testRoom.id])
-    expect(rowResult.rows[0].roomNumber).toBe(newRoomNumber)
+    const rowResult = await query(`SELECT room_number FROM rooms WHERE id=$1`, [testRoom.id])
+    expect(rowResult.rows[0].room_number).toBe(newRoomNumber)
   })
 
   it('updates room type id when given new room type id', async({ roomRepository }) => {
@@ -251,7 +251,7 @@ describe('RoomRepository [updateRoom]', () => {
     // Assert
     expect(newRoom.roomTypeId).toBe(newRoomTypeId)
     //Assert side effect
-    const rowResult = await query(`SELECT price_per_night FROM rooms WHERE id=$1`, [testRoom.id])
+    const rowResult = await query(`SELECT room_type_id FROM rooms WHERE id=$1`, [testRoom.id])
     expect(Number(rowResult.rows[0].room_type_id)).toBe(newRoomTypeId)
   })
 })
