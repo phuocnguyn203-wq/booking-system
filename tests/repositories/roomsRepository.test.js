@@ -12,10 +12,12 @@ const it = baseIt.extend('roomRepository', () => {
 
 /*
 Room obj:
-- id
-- name
-- price_per_night
-- created_at
+- id: Number
+- roomNumber: String
+- roomTypeId: Number
+- floor: String
+- status: String
+- isDeleted: Boolean
 */
 
 describe('RoomRepository [findById]', () => {
@@ -24,10 +26,10 @@ describe('RoomRepository [findById]', () => {
     const testRoom = await createTestRoom();
 
     // Act
-    const roomRetrieved = await roomRepository.findById(testRoom.id);
+    const room = await roomRepository.findById(testRoom.id);
 
     // Arrange
-    expect(roomRetrieved.id).toEqual(testRoom.id);
+    expect(room).toMatchObject(testRoom)
   })
 
   it('returns null when given non-exist room id', async({ roomRepository }) => {

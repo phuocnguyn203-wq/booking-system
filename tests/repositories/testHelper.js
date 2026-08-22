@@ -5,6 +5,7 @@ const CLEAN_QUERY = `
   DELETE FROM bookings;
   DELETE FROM users;
   DELETE FROM rooms;
+  DELETE FROM room_types;
 `
 export async function cleanBeforeEachAndAfterAll() {
   beforeEach(async () => {
@@ -16,25 +17,83 @@ export async function cleanBeforeEachAndAfterAll() {
   })
 }
 
-export async function createTestRoom({ name="Room 1", pricePerNight=200, isDeleted=false } = {}) {
+let roomTypeSequence = 0
+let roomSequence = 0
 
+async function createTestRoomType(overrides={}) {
+  const sequence = ++roomSequence
+
+  const roomType = {
+    code: `TEST_TYPE_${sequence}`,
+    name: `Test Room Type ${sequence}`,
+    pricePerNight: 120,
+    capacity: 2,
+    description: null,
+    isDeleted: false,
+    ...overrides
+  }
+
+  const rowResult = await query(
+    `
+    INSERT INTO room_types (code, name, price_per_night, capacity, description, is_deleted)
+    VALUES
+    ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+    `,
+    [
+      roomType.code,
+      roomType.name,
+      roomType.pricePerNight,
+      roomType.capacity,
+      roomType.description,
+      roomType.isDeleted
+    ]
+  )
+  const row = rowResult.rows[0]
+
+  return {
+    id: Number(row.id),
+    code: row.code,
+    name: row.name,
+    pricePerNight: Number(row.price_per_night),
+    capacity: Number(row.capacity),
+    description: row.description,
+    isDeleted: row.is_deleted
+  }
+}
+
+export async function createTestRoom(overrides = {}) {
+  const sequence = ++roomSequence
+
+  const {
+    roomNumber = `TEST-${sequence}`,
+    roomTypeId,
+    floor=1,
+    status='active',
+    isDeleted=false
+
+  } = overrides
+
+  const effectiveRoomTypeId =
+    roomTypeId ?? (await createTestRoomType()).id 
   const result = await query(
     `
-    INSERT INTO rooms (name, price_per_night, is_deleted)
+    INSERT INTO rooms (room_number, room_type_id, floor, status, is_deleted)
     VALUES
-    ($1, $2, $3)
+    ($1, $2, $3, $4, $5)
     RETURNING *;
     `,
-    [name, pricePerNight, isDeleted],
+    [roomNumber, effectiveRoomTypeId, floor, status, isDeleted],
   )
 
-  const room = result.rows[0]
+  const row = result.rows[0]
   return {
-    id: Number(room.id),
-    name: room.name,
-    pricePerNight: Number(room.price_per_night),
-    createdAt: Date(room.created_at),
-    isDeleted: room.is_deleted,
+    id: Number(row.id),
+    roomNumber: row.room_number,
+    roomTypeId: Number(row.room_type_id),
+    floor: row.floor,
+    status: row.status,
+    isDeleted: row.is_deleted,
   }
 }
 
