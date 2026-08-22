@@ -4,9 +4,11 @@ import createAppError from '../errors/AppError.js';
 function mapRowToRoom(row) {
   return {
     id: Number(row.id),
-    name: row.name,
-    pricePerNight: Number(row.price_per_night),
-    created_at: row.created_at,
+    roomNumber: row.room_number,
+    roomTypeId: Number(row.room_type_id),
+    floor: row.floor,
+    status: row.status,
+    isDeleted: row.is_deleted,
   };
 }
 export default class RoomRepository {
@@ -18,7 +20,7 @@ export default class RoomRepository {
     try {
       const result = await this.query(
         `
-        SELECT id, name, price_per_night, created_at
+        SELECT id, room_number, room_type_id, floor, status, is_deleted 
         FROM rooms
         WHERE id=$1 AND is_deleted=false
         `,
