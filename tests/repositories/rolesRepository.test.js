@@ -113,3 +113,73 @@ describe('RoleRepository [createRole]', () => {
       })
     })
 })
+
+describe('RoleRepository [updateRole]', () => {
+
+  const updateFields = [
+    [{ code: 'admin' }],
+    [{ name: 'Administrator' }],
+    [{ description: 'Very misterious' }],
+    [{ isActive: false }]
+  ]
+  it.for(updateFields)(
+    'returns new role and update $field in database', 
+    async ({ updateInfo }, { roleRepository }) => {
+      // Arrange
+      const testRole = await createTestRole()
+
+      // Act
+      const newRole = await roleRepository.updateRole(testRole.id, updateInfo)
+
+      // Assert
+      expect(newRole).toMatchObject(updateInfo)
+  })
+
+  it('throws when no valid fields are provided', async ({ roleRepository }) => {
+    // Arrange
+    const invalidFields = {
+      newName: 'Rocker',
+      newCode: 'Desp1',
+      isBoss: true
+    }
+
+    // Act
+    const newRole = roleRepository.updateRole(invalidFields)
+
+    // Assert
+    await expect(newRole).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'Field names are not correct.'
+    })
+  })
+
+  it('sets description to null', async ({ roleRepository }) => {
+    // Arrange
+    const testRole = await createTestRole({ description: 'Manages system' })
+
+    // Act
+    await roleRepository.updateRole({ description: null })
+
+    // Assert
+    const rowResult = await query(
+      `SELECT description FROM roles WHERE id=$1`, 
+      [testRole.id]
+    )
+    expect(rowResult.rows[0].description).toBeNull()
+  })
+
+  it('returns null when role does not exist', async ({ roleRepository }) => {
+    // Arrange
+    const nonExistentId = 100
+    const updateInfo = {
+      name: 'Administrator',
+      code: 'admin'
+    }
+
+    // Act
+    const newRole = await roleRepository.updateRole(nonExistentId, updateINfo)
+
+    // Assert
+    expect(newRole).toBeNull()
+  })
+})
