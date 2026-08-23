@@ -6,8 +6,8 @@ const CLEAN_QUERY = `
   DELETE FROM user_roles;
   DELETE FROM roles;
   DELETE FROM users;
-  DELETE FROM room_types;
   DELETE FROM rooms;
+  DELETE FROM room_types;
 `
 export async function cleanBeforeEachAndAfterAll() {
   beforeEach(async () => {
