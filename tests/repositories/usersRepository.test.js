@@ -177,6 +177,18 @@ describe('UserRepository [updateUser]', () => {
     expect(userInDb).toMatchObject(updateInfo)
   })
 
+  it('returns null when given id of deleted user', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ isDeleted: true })
+    const updateInfo = { email: 'helloworld@gmail.com' }
+
+    // Act
+    const user = await userRepository.updateUser(testUser.id, updateInfo)
+
+    // Assert
+    expect(user).toBeNull()
+  })
+
   it('throws AppError when it\'s given all invalid fields', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser()

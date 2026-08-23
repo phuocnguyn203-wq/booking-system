@@ -73,7 +73,34 @@ export default class UserRepository {
   }
 
   async updateUser(id, updateInfo) {
-    const allowedFields = new Set(['email', 'fullname'])
+
+    const interfaceMap = new Map([
+      ['fullName', 'fullname'],
+      ['email', 'email'],
+      ['phone', 'phone'],
+      ['status', 'status'],
+      ['emailVerifiedAt', 'email_verified_at'],
+      ['hashedPassword', 'hashed_password']
+    ])
+
+    for (const [key, value] of Object.entries(updateInfo)) {
+      if (interfaceMap.has(key))
+        updateInfo[interfaceMap.get(key)] = value
+      else {
+        delete updateInfo[key]
+      }
+    }
+
+    console.log(updateInfo)
+
+    const allowedFields = new Set([
+      'email', 
+      'fullname',
+      'phone',
+      'status',
+      'email_verified_at',
+      'hashed_password'
+    ])
     
     const entries = Object.entries(updateInfo).filter(
       ([key, value]) => allowedFields.has(key) && value !== undefined
@@ -87,19 +114,23 @@ export default class UserRepository {
       return value
     })
     values.push(id)
-
-    const rowResult = await this.query(
-    `
-    UPDATE users SET ${setClause.join(', ')}
-    WHERE id=$${values.length} AND is_deleted=false
-    RETURNING *
-    `,
-    values
-    )
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE users SET ${setClause.join(', ')}
+        WHERE id=$${values.length} AND is_deleted=false
+        RETURNING *
+        `,
+        values
+      )
     
-    if (rowResult.rows.length === 0)
-      return null
-    return mapRowToUser(rowResult.rows[0])    
+      if (rowResult.rows.length === 0)
+        return null
+      return mapRowToUser(rowResult.rows[0])  
+    } catch (error) {
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
+    }
+  
   }
 
   async deleteUser(id) {
