@@ -107,7 +107,7 @@ export async function createTestRole(overrides = {}) {
     code= `test_role${sequence}`,
     name=`TEST ROLE ${sequence}`,
     description=null,
-    isActive='active'
+    isActive=true
   } = overrides
 
   const rowResult = await query(
