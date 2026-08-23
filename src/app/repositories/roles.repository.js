@@ -65,4 +65,55 @@ export default class RoleRepository {
     }
   }
 
+  async updateRole(id, updateInfo) {
+    const interfaceMap = new Map([
+      ['code', 'code'],
+      ['name', 'name'],
+      ['description', 'description'],
+      ['isActive', 'is_active']
+    ])
+
+    const entries = Object.entries(updateInfo ?? {})
+      .filter(([key, value]) => {
+        return interfaceMap.has(key) && value !== undefined
+      })
+      .map(([key, value]) => {
+        return [interfaceMap.get(key), value]
+      })
+    
+    if (entries.length === 0)
+      throw createAppError(Errors.NO_VALID_FIELDS)
+
+    const values = []
+    const setClause = entries.map(([key, value]) => {
+      values.push(value)
+      return `${key} = $${values.length}`
+    })
+    values.push(id)
+
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE roles SET ${setClause.join(', ')}
+        WHERE id=$${values.length}
+        RETURNING code, name, description, is_active
+        `
+        ,values
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+      return mapRowToRole(rowResult.rows[0])
+    } catch (error) {
+      if (error.code === '23505')
+        throw createAppError(Errors.ROLE_CODE_UNIQUE_VIOLATION)
+      if (error.code === '23502')
+        throw createAppError(Errors.NOT_NULL_VALIDATION)
+
+      console.log(error)
+      throw createAppError(Errors.DATA_ACCESS_ERROR)
+    }
+
+  }
+  
 }

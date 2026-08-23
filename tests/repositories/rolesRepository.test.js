@@ -117,14 +117,14 @@ describe('RoleRepository [createRole]', () => {
 describe('RoleRepository [updateRole]', () => {
 
   const updateFields = [
-    [{ code: 'admin' }],
-    [{ name: 'Administrator' }],
-    [{ description: 'Very misterious' }],
-    [{ isActive: false }]
+    { code: 'admin' },
+    { name: 'Administrator' },
+    { description: 'Very misterious' },
+    { isActive: false }
   ]
   it.for(updateFields)(
     'returns new role and update $field in database', 
-    async ({ updateInfo }, { roleRepository }) => {
+    async (updateInfo, { roleRepository }) => {
       // Arrange
       const testRole = await createTestRole()
 
@@ -137,6 +137,7 @@ describe('RoleRepository [updateRole]', () => {
 
   it('throws when no valid fields are provided', async ({ roleRepository }) => {
     // Arrange
+    const testRole = await createTestRole()
     const invalidFields = {
       newName: 'Rocker',
       newCode: 'Desp1',
@@ -144,7 +145,7 @@ describe('RoleRepository [updateRole]', () => {
     }
 
     // Act
-    const newRole = roleRepository.updateRole(invalidFields)
+    const newRole = roleRepository.updateRole(testRole.id, invalidFields)
 
     // Assert
     await expect(newRole).rejects.toMatchObject({
@@ -158,7 +159,7 @@ describe('RoleRepository [updateRole]', () => {
     const testRole = await createTestRole({ description: 'Manages system' })
 
     // Act
-    await roleRepository.updateRole({ description: null })
+    await roleRepository.updateRole(testRole.id, { description: null })
 
     // Assert
     const rowResult = await query(
@@ -177,7 +178,7 @@ describe('RoleRepository [updateRole]', () => {
     }
 
     // Act
-    const newRole = await roleRepository.updateRole(nonExistentId, updateINfo)
+    const newRole = await roleRepository.updateRole(nonExistentId, updateInfo)
 
     // Assert
     expect(newRole).toBeNull()
