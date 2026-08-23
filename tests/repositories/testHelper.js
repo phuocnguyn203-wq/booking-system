@@ -165,6 +165,30 @@ export async function createTestUser(overrides = {}) {
   }
 }
 
+
+// UserRole Test
+export async function createTestUserRole(overrides = {}) {
+  const {
+    userId=(await createTestUser()).id,
+    roomId=(await createTestRoom()).id
+  } = overrides
+
+  const rowResult = query(
+    `
+    INSERT INTO user_roles (user_id, role_id)
+    VALUES
+    ($1, $2)
+    `,
+    [userId, roomId]
+  )
+  const row = rowResult.rows[0]
+
+  return {
+    userId: Number(row.user_id),
+    roomId: Number(row.room_id)
+  }
+}
+
 // Booking Test -----------------------------------
 export async function createTestBooking({ 
   userId,
