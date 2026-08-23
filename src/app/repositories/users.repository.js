@@ -1,13 +1,16 @@
 import createAppError from '../errors/AppError.js'
 import Errors from '../errors/errorDefinitions.js'
 
-function mapRowToUser(userRow) {
+function mapRowToUser(row) {
   return {
-    id: Number(userRow.id),
-    fullname: userRow.fullname,
-    email: userRow.email,
-    username: userRow.username,
-    hashedPassword: userRow.hashed_password
+    id: Number(row.id),
+    email: row.email,
+    fullname: row.fullname,
+    username: row.username,
+    phone: row.phone,
+    status: row.status,
+    emailVerifiedAt: row.status || null,
+    isDeleted: row.isDeleted
   }
 }
 

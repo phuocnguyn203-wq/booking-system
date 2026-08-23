@@ -4,10 +4,10 @@ import { query } from '../../src/database/index.js'
 const CLEAN_QUERY = `
   DELETE FROM bookings;
   DELETE FROM user_roles;
-  DELETE FROM roles
+  DELETE FROM roles;
   DELETE FROM users;
-  DELETE FROM rooms;
   DELETE FROM room_types;
+  DELETE FROM rooms;
 `
 export async function cleanBeforeEachAndAfterAll() {
   beforeEach(async () => {
@@ -110,8 +110,8 @@ export async function createTestUser(overrides = {}) {
     hashedPassword='faked-hashed-password',
     phone='0123456789',
     status='active',
-    emailVerifiedAt,
-    isDeleted,
+    emailVerifiedAt=null,
+    isDeleted=false,
   } = overrides
   const rowResult = await query(`
     INSERT INTO users (email, fullname, username, hashed_password, phone, status, email_verified_at, is_deleted)
