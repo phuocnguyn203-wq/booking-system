@@ -3,6 +3,8 @@ import { query } from '../../src/database/index.js'
 
 const CLEAN_QUERY = `
   DELETE FROM bookings;
+  DELETE FROM user_roles;
+  DELETE FROM roles
   DELETE FROM users;
   DELETE FROM rooms;
   DELETE FROM room_types;
@@ -19,7 +21,7 @@ export async function cleanBeforeEachAndAfterAll() {
 
 let roomTypeSequence = 0
 let roomSequence = 0
-
+// Room TEST -----------------------------------
 export async function createTestRoomType(overrides={}) {
   const sequence = ++roomSequence
 
@@ -97,33 +99,43 @@ export async function createTestRoom(overrides = {}) {
   }
 }
 
-export async function createTestUser({ 
-  email='testUser@gmail.com', 
-  fullname='Tester User',
-  username='tester1',
-  hashedPassword='fake-hashed-password',
-  isDeleted=false
- } = {}) {
+
+// User Test -----------------------------------
+export async function createTestUser(overrides = {}) {
+
+  const { 
+    email='tester1@gmail.com',
+    fullname='Tester User',
+    username='test1',
+    hashedPassword='faked-hashed-password',
+    phone='0123456789',
+    status='active',
+    emailVerifiedAt,
+    isDeleted,
+  } = overrides
   const rowResult = await query(`
-    INSERT INTO users (email, fullname, username, hashed_password, is_deleted)
+    INSERT INTO users (email, fullname, username, hashed_password, phone, status, email_verified_at, is_deleted)
     VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *
     `,
-    [email, fullname, username, hashedPassword, isDeleted]
+    [email, fullname, username, hashedPassword, phone, status, emailVerifiedAt, isDeleted]
   )
 
-  const user = rowResult.rows[0]
+  const row = rowResult.rows[0]
   return {
-    id: Number(user.id),
-    email: user.email,
-    fullname: user.fullname,
-    username: user.username,
-    hashedPassword: user.hashedPassword,
-    isDeleted: user.isDeleted
+    id: Number(row.id),
+    email: row.email,
+    fullname: row.fullname,
+    username: row.username,
+    phone: row.phone,
+    status: row.status,
+    emailVerifiedAt: row.status || null,
+    isDeleted: row.isDeleted
   }
 }
 
+// Booking Test -----------------------------------
 export async function createTestBooking({ 
   userId,
   roomId, 
