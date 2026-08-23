@@ -3,7 +3,7 @@ import { cleanBeforeEachAndAfterAll, createTestUser, createTestRole } from './te
 import UserRoleRepository from '../../src/app/repositories/userRoles.repository.js'
 import { query } from '../../src/database/index.js'
 
-const it = baseIt.extend('testRoleRepository', () => {
+const it = baseIt.extend('roleUserRepository', () => {
   return new UserRoleRepository(query)
 })
 
