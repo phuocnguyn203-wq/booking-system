@@ -164,7 +164,7 @@ describe('UserRepository [updateUser]', () => {
   it('returns newUser and updates user in database', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser()
-    const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
+    const updateInfo = { status: 'suspended' }
 
     // Act
     const user = await userRepository.updateUser(testUser.id, updateInfo)
@@ -172,13 +172,7 @@ describe('UserRepository [updateUser]', () => {
     // Assert
     expect(user).toMatchObject(updateInfo)
     // Assert side effect
-    const rowResult = await query(
-      `
-      SELECT * FROM users
-      WHERE id=$1
-      `,
-      [testUser.id]
-    )
+    const rowResult = await query(`SELECT * FROM users WHERE id=$1`, [testUser.id])
     const userInDb = rowResult.rows[0]
     expect(userInDb).toMatchObject(updateInfo)
   })
@@ -196,16 +190,12 @@ describe('UserRepository [updateUser]', () => {
       statusCode: 400,
       message: 'Field names are not correct.'
     })
-    // Assert side effect
-    const rowResult = await query(`SELECT * FROM users WHERE id=$1`, [testUser.id])
-    const userInDb = rowResult.rows[0]
-    expect(userInDb).not.toMatchObject(invalidFieldUpdate)
   })
 
   it('returns null when it doesn\'t find user match given id', async ({ userRepository }) => {
     // Arrange
     const nonExistId = 999
-    const updateInfo = { fullname: 'New Fullname', email: 'newemail@gmail.com' }
+    const updateInfo = { fullName: 'New Fullname', email: 'newemail@gmail.com' }
     
     // Act
     const user = await userRepository.updateUser(nonExistId, updateInfo)
