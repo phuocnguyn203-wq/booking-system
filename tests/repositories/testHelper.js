@@ -99,6 +99,36 @@ export async function createTestRoom(overrides = {}) {
   }
 }
 
+// Role Test
+let roleSequence = 0
+export async function createTestRole(overrides = {}) {
+  const sequence = ++roleSequence
+  const {
+    code= `test_role${sequence}`,
+    name=`TEST ROLE ${sequence}`,
+    description=null,
+    isActive='active'
+  } = overrides
+
+  const rowResult = await query(
+    `
+    INSERT INTO roles (code, name, description, is_active)
+    VALUES
+    ($1, $2, $3, $4)
+    RETURNING *;
+    `,
+    [code, name, description, isActive]
+  )
+  const row = rowResult.rows[0]
+  return {
+    id: Number(row.id),
+    code: row.code,
+    name: row.name,
+    description: row.description,
+    isActive: row.is_active
+  }
+}
+
 
 // User Test -----------------------------------
 export async function createTestUser(overrides = {}) {
