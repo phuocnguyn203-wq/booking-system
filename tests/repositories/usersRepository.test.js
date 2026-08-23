@@ -8,9 +8,21 @@ const it = baseIt.extend('userRepository', () => {
   return new UserRepository(query)
 })
 
+/*
+User object:
+- id: Number,
+- email: String
+- fullname: String
+- username: String
+- phone: String
+- status: String
+- emailVerifiedAt: Date | null
+- isDeleted: Boolean
+*/
+
 await cleanBeforeEachAndAfterAll()
 
-describe('UserRepository [getById]', () => {
+describe('UserRepository [findById]', () => {
   it('returns user when given id', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser()
@@ -19,9 +31,7 @@ describe('UserRepository [getById]', () => {
     const user = await userRepository.findById(testUser.id)
 
     // Assert
-    expect(user.id).toBe(testUser.id)
-    expect(user.fullname).toBe(testUser.fullname)
-    expect(user.email).toBe(testUser.email)
+    expect(user).toMatchObject(testUser)
   })
 
   it('returns null when given non-exist id', async ({ userRepository }) => {
