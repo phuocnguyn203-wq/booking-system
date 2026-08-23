@@ -24,6 +24,11 @@ const Errors = {
     code: 'INVALID_STATUS_ROOM',
     message: 'Invalid status room'
   },
+  ROLE_CODE_UNIQUE_VIOLATION: {
+    statusCode: 409,
+    code: 'ROLE_CODE_UNIQUE_VIOLATION',
+    message: 'A role with this information already exists'
+  },
   UNIQUE_VALIDATION: {
     statusCode: 409,
     code: 'UNIQUE_VALIDATION',

@@ -69,11 +69,11 @@ describe('RoleRepository [createRole]', () => {
     // Arrange
     const testRole = await createTestRole()
     const duplicatedCodeInfo = {
-      code: testRole.role,
+      code: testRole.code,
       name: 'Mysterious role',
       description: null,
     }
-    
+
     // Act
     const rolePromise = roleRepository.createRole(duplicatedCodeInfo)
 
@@ -84,31 +84,32 @@ describe('RoleRepository [createRole]', () => {
     })
   })
 
-  it.each([
-    [
-      'code', 
-      {
-        name: 'Administrator',
-        description: 'Manages the system'
-      }
-    ],
-    [
-      'name',
-      {
-        code: 'admin',
-        description: 'Manages the system'
-      }
-    ]
-  ])('throw AppError when not given %s', async (_, incompleteInfo, { roleRepository }) => {
-    // Arrange
+  const incompleteRoleCases = [
+  {
+    missingField: 'code',
+    incompleteInfo: {
+      name: 'Administrator',
+      description: 'Manages the system'
+    }
+  },
+  {
+    missingField: 'name',
+    incompleteInfo: {
+      code: 'admin',
+      description: 'Manages the system'
+    }
+  }
+]
 
-    // Act
-    const rolePromise = roleRepository.create(incompleteInfo)
+  it.for(incompleteRoleCases)(
+    'throws AppError when not given $missingField',
+    async ({ incompleteInfo }, { roleRepository }) => {
+      const rolePromise =
+        roleRepository.createRole(incompleteInfo)
 
-    // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Required fields are mising'
+      await expect(rolePromise).rejects.toMatchObject({
+        statusCode: 400,
+        message: 'Required fields are missing'
+      })
     })
-  })
 })
