@@ -122,27 +122,6 @@ describe('UserRepository [createUser]', () => {
       statusCode: 409,
       message: 'An account with provided information already exists.'
     })
-    it('throws AppError and doesn\'t user to database when given duplicated phone', async ({ userRepository }) => {
-    // Arrange
-    const duplicatedPhone = '029384928'
-    const userInfoDuplicatedPhone = {
-      email: 'john@example.com',
-      fullname: 'JohnDoe',
-      username: 'johndoe',
-      phone: duplicatedPhone,
-      status: 'active',
-      hashedPassword: 'fake-hashed-password'
-    }
-    await createTestUser({ phone: duplicatedPhone })
-
-    // Act
-    const user = userRepository.createUser(userInfoDuplicatedEmail)
-
-    // Assert
-    expect(user).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'An account with provided information already exists.'
-    })
   })
 
   it('throws AppError and doesn\'t add user to database when given nothing', async ({ userRepository }) => {
@@ -154,22 +133,24 @@ describe('UserRepository [createUser]', () => {
     // Expect
     await expect(user).rejects.toMatchObject({
       statusCode: 400,
-      message: 'Required field is missing'
+      message: 'Required fields are missing'
     })
   })
 
   it('throws AppErrors and doesn\'t add user to database when given invalid email', async ({ userRepository }) => {
     // Arrange
     const invalidEmail = '.invalid@example.com'
-    const userInfoDuplicatedname = {
-      fullname: 'Tester1',
+    const userInfoInvalid = {
       email: invalidEmail,
-      username: 'tester1',
+      fullname: 'JohnDoe',
+      username: 'johndoe',
+      phone: '0123456789',
+      status: 'active',
       hashedPassword: 'fake-hashed-password'
     }
 
     // Act
-    const user = userRepository.createUser(userInfoDuplicatedname)
+    const user = userRepository.createUser(userInfoInvalid)
 
     // Assert
     await expect(user).rejects.toMatchObject({

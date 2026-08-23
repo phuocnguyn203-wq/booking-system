@@ -38,18 +38,26 @@ export default class UserRepository {
     }
   }
 
-  async createUser({ email, fullname, username, hashedPassword }) {
+  async createUser(userInfo) {
     try {
+      const {
+        email,
+        fullname,
+        username,
+        hashedPassword,
+        phone,
+        status
+      } = userInfo
+
       const rowResult = await this.query(
       `
-        INSERT INTO users (email, fullname, username, hashed_password)
+        INSERT INTO users (email, fullname, username, hashed_password, phone, status)
         VALUES
-        ($1, $2, $3, $4)
+        ($1, $2, $3, $4, $5, $6)
         RETURNING *
       `,
-      [email, fullname, username, hashedPassword]
+      [email, fullname, username, hashedPassword, phone, status]
       )
-
       return mapRowToUser(rowResult.rows[0])
 
     } catch (error) {
