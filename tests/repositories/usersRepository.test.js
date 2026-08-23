@@ -218,7 +218,7 @@ describe('UserRepository [updateUser]', () => {
 })
 
 describe('UserRepository [deleteUser]', () => {
-  it('returns number of row affected and soft deletes user when given id', async ({ userRepository }) => {
+  it('returns true and soft deletes user when given id', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser()
 
@@ -228,11 +228,12 @@ describe('UserRepository [deleteUser]', () => {
     // Assert
     expect(isDeleted).toBe(true)
     // Assert side effect
-    const rowResult = await query(`SELECT id FROM users WHERE id=$1 AND is_deleted=true`, [testUser.id])
-    expect(rowResult.rows.length).toBe(1)
+    const rowResult = await query(`SELECT id, is_deleted FROM users WHERE id=$1`, [testUser.id])
+    expect(rowResult.rows[0].id).toBe(String(testUser.id))
+    expect(rowResult.rows[0].is_deleted).toBe(true)
   })
 
-  it('returns 0 when given user deleted already', async ({ userRepository }) => {
+  it('returns false when given user deleted already', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser({ isDeleted: true })
 
