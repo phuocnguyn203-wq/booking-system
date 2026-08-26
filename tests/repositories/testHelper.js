@@ -167,26 +167,28 @@ export async function createTestUser(overrides = {}) {
 
 
 // UserRole Test
-export async function createTestUserRole(overrides = {}) {
-  const {
-    userId=(await createTestUser()).id,
-    roomId=(await createTestRoom()).id
-  } = overrides
-
-  const rowResult = query(
+export async function createTestUserRole({ userId, roleId }) {
+  const rowResult = await query(
     `
     INSERT INTO user_roles (user_id, role_id)
     VALUES
     ($1, $2)
+    RETURNING user_id, role_id, assigned_at
     `,
-    [userId, roomId]
+    [userId, roleId]
   )
   const row = rowResult.rows[0]
 
   return {
     userId: Number(row.user_id),
-    roomId: Number(row.room_id)
+    roleId: Number(row.role_id),
+    assignedAt: row.assigned_at
   }
+}
+
+export async function createTestUserRoleWrapper({ userId, roleIds }) {
+  for (let roleId of roleIds)
+    await createTestUserRole(userId, roleId)
 }
 
 // Booking Test -----------------------------------
