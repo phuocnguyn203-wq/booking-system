@@ -1,5 +1,6 @@
 import { describe, it as baseIt, expect } from 'vitest'
 import { cleanBeforeEachAndAfterAll, createTestRole } from './testHelper'
+import { expectRepositoryError } from './repositoryTestAssertions.js'
 import RoleRepository from '../../src/app/repositories/roles.repository.js'
 import { query } from '../../src/database/index.js'
 
@@ -40,6 +41,17 @@ describe('RoleRepository [findById]', () => {
     expect(role).toBeNull()
   })
 
+  it('returns inactive state so the service can evaluate role eligibility', async ({ roleRepository }) => {
+    // Arrange
+    const testRole = await createTestRole({ isActive: false })
+
+    // Act
+    const role = await roleRepository.findById(testRole.id)
+
+    // Assert
+    expect(role.isActive).toBe(false)
+  })
+
 })
 
 describe('RoleRepository [createRole]', () => {
@@ -65,7 +77,7 @@ describe('RoleRepository [createRole]', () => {
     expect(row).toMatchObject(roleInfo)
   })
 
-  it('throws AppError when given duplicated code', async ({ roleRepository}) => {
+  it('rejects with a unique constraint error when given duplicated code', async ({ roleRepository}) => {
     // Arrange
     const testRole = await createTestRole()
     const duplicatedCodeInfo = {
@@ -78,9 +90,9 @@ describe('RoleRepository [createRole]', () => {
     const rolePromise = roleRepository.createRole(duplicatedCodeInfo)
 
     // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'A role with this information already exists'
+    await expectRepositoryError(rolePromise, {
+      code: 'UNIQUE_CONSTRAINT',
+      constraint: 'roles_code_key'
     })
   })
 
@@ -102,14 +114,14 @@ describe('RoleRepository [createRole]', () => {
 ]
 
   it.for(incompleteRoleCases)(
-    'throws AppError when not given $missingField',
-    async ({ incompleteInfo }, { roleRepository }) => {
+    'rejects with a not-null constraint error when not given $missingField',
+    async ({ missingField, incompleteInfo }, { roleRepository }) => {
       const rolePromise =
         roleRepository.createRole(incompleteInfo)
 
-      await expect(rolePromise).rejects.toMatchObject({
-        statusCode: 400,
-        message: 'Required fields are missing'
+      await expectRepositoryError(rolePromise, {
+        code: 'NOT_NULL_CONSTRAINT',
+        column: missingField
       })
     })
 })
@@ -135,7 +147,7 @@ describe('RoleRepository [updateRole]', () => {
       expect(newRole).toMatchObject(updateInfo)
   })
 
-  it('throws when no valid fields are provided', async ({ roleRepository }) => {
+  it('rejects with a repository input error when no updatable fields are provided', async ({ roleRepository }) => {
     // Arrange
     const testRole = await createTestRole()
     const invalidFields = {
@@ -148,9 +160,8 @@ describe('RoleRepository [updateRole]', () => {
     const newRole = roleRepository.updateRole(testRole.id, invalidFields)
 
     // Assert
-    await expect(newRole).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Field names are not correct.'
+    await expectRepositoryError(newRole, {
+      code: 'NO_UPDATABLE_FIELDS'
     })
   })
 

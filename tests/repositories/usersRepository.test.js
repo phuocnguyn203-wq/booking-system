@@ -2,6 +2,7 @@ import { describe, expect } from 'vitest'
 import { it as baseIt } from 'vitest'
 import { query } from '../../src/database/index.js'
 import { cleanBeforeEachAndAfterAll, createTestUser } from './testHelper.js'
+import { expectRepositoryError } from './repositoryTestAssertions.js'
 import UserRepository from '../../src/app/repositories/users.repository.js'
 
 const it = baseIt.extend('userRepository', () => {
@@ -55,6 +56,17 @@ describe('UserRepository [findById]', () => {
     // Assert
     expect(user).toBeNull()
   })
+
+  it('returns suspended status so the service can evaluate user eligibility', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ status: 'suspended' })
+
+    // Act
+    const user = await userRepository.findById(testUser.id)
+
+    // Assert
+    expect(user.status).toBe('suspended')
+  })
 })
 
 describe('UserRepository [createUser]', () => {
@@ -79,7 +91,7 @@ describe('UserRepository [createUser]', () => {
     expect(userInDb.id).toBe(newUser.id.toString())
   })
 
-  it('throws AppError and doesn\'t user to database when given duplicated username', async ({ userRepository }) => {
+  it('rejects with a unique constraint error when given duplicated username', async ({ userRepository }) => {
     // Arrange
     const duplicatedUsername = 'johndoe'
     const userInfoDuplicatedUsername = {
@@ -95,13 +107,13 @@ describe('UserRepository [createUser]', () => {
     // Act
     const user = userRepository.createUser(userInfoDuplicatedUsername)
     // Assert
-    await expect(user).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'An account with provided information already exists.'
+    await expectRepositoryError(user, {
+      code: 'UNIQUE_CONSTRAINT',
+      constraint: 'users_username_key'
     })
   })
 
-  it('throws AppError and doesn\'t user to database when given duplicated email', async ({ userRepository }) => {
+  it('rejects with a unique constraint error when given duplicated email', async ({ userRepository }) => {
     // Arrange
     const duplicatedEmail = 'john@gmail.com'
     const userInfoDuplicatedEmail = {
@@ -118,26 +130,26 @@ describe('UserRepository [createUser]', () => {
     const user = userRepository.createUser(userInfoDuplicatedEmail)
 
     // Assert
-    expect(user).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'An account with provided information already exists.'
+    await expectRepositoryError(user, {
+      code: 'UNIQUE_CONSTRAINT',
+      constraint: 'users_email_key'
     })
   })
 
-  it('throws AppError and doesn\'t add user to database when given nothing', async ({ userRepository }) => {
+  it('rejects with a not-null constraint error when required data is missing', async ({ userRepository }) => {
     // Arrange
     
     // Act
     const user = userRepository.createUser({})
 
     // Expect
-    await expect(user).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Required fields are missing'
+    await expectRepositoryError(user, {
+      code: 'NOT_NULL_CONSTRAINT',
+      column: 'email'
     })
   })
 
-  it('throws AppErrors and doesn\'t add user to database when given invalid email', async ({ userRepository }) => {
+  it('rejects with a check constraint error when given invalid email', async ({ userRepository }) => {
     // Arrange
     const invalidEmail = '.invalid@example.com'
     const userInfoInvalid = {
@@ -153,9 +165,9 @@ describe('UserRepository [createUser]', () => {
     const user = userRepository.createUser(userInfoInvalid)
 
     // Assert
-    await expect(user).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Email is not valid'
+    await expectRepositoryError(user, {
+      code: 'CHECK_CONSTRAINT',
+      constraint: 'email_validation'
     })
   })
 })
@@ -189,7 +201,7 @@ describe('UserRepository [updateUser]', () => {
     expect(user).toBeNull()
   })
 
-  it('throws AppError when it\'s given all invalid fields', async ({ userRepository }) => {
+  it('rejects with a repository input error when no updatable fields are provided', async ({ userRepository }) => {
     // Arrange
     const testUser = await createTestUser()
     const invalidFieldUpdate = { myUserName: 'John', newEmail: 'newEmail@gmail.com' }
@@ -198,9 +210,8 @@ describe('UserRepository [updateUser]', () => {
     const user = userRepository.updateUser(testUser.id, invalidFieldUpdate)
 
     // Assert
-    await expect(user).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Field names are not correct.'
+    await expectRepositoryError(user, {
+      code: 'NO_UPDATABLE_FIELDS'
     })
   })
 
