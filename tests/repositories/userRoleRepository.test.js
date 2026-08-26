@@ -169,3 +169,97 @@ describe('UserRoleRepository [createUserRole]', () => {
     expect(rowResult.rows).toEqual([])
   })
 })
+
+describe('UserRoleRepository [updateUserRole]', () => {
+  it('returns new role ids and replaces roles assigned to user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const oldRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
+    const newRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
+    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: oldRoleIds })
+
+    // Act
+    const roleIds = await userRoleRepository.updateUserRole(testUser.id, newRoleIds)
+
+    // Assert
+    expect(roleIds).toHaveLength(newRoleIds.length)
+    expect(roleIds).toEqual(expect.arrayContaining(newRoleIds))
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    const roleIdsInDb = rowResult.rows.map(row => Number(row.role_id))
+    expect(roleIdsInDb).toHaveLength(newRoleIds.length)
+    expect(roleIdsInDb).toEqual(expect.arrayContaining(newRoleIds))
+    expect(roleIdsInDb).not.toEqual(expect.arrayContaining(oldRoleIds))
+  })
+
+  it('returns empty list and removes all roles when given empty role ids', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const oldRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
+    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: oldRoleIds })
+
+    // Act
+    const roleIds = await userRoleRepository.updateUserRole(testUser.id, [])
+
+    // Assert
+    expect(roleIds).toEqual([])
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows).toEqual([])
+  })
+
+  it('throws AppError and keeps old roles when given non-existent role id', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const oldRole = await createTestRole()
+    const deletedRole = await createTestRole()
+    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: [oldRole.id] })
+    await query(`DELETE FROM roles WHERE id=$1`, [deletedRole.id])
+
+    // Act
+    const rolePromise = userRoleRepository.updateUserRole(testUser.id, [deletedRole.id])
+
+    // Assert
+    await expect(rolePromise).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'ROLE_NON_EXISTENT',
+      message: 'Role does not exist'
+    })
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
+  })
+
+  it('throws AppError and keeps old roles when given inactive role id', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const oldRole = await createTestRole()
+    const inactiveRole = await createTestRole({ isActive: false })
+    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: [oldRole.id] })
+
+    // Act
+    const rolePromise = userRoleRepository.updateUserRole(testUser.id, [inactiveRole.id])
+
+    // Assert
+    await expect(rolePromise).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'ROLE_INACTIVE',
+      message: 'Cannot assign an inactive role'
+    })
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
+  })
+})
