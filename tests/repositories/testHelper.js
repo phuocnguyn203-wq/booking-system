@@ -188,7 +188,7 @@ export async function createTestUserRole({ userId, roleId }) {
 
 export async function createTestUserRoleWrapper({ userId, roleIds }) {
   for (let roleId of roleIds)
-    await createTestUserRole(userId, roleId)
+    await createTestUserRole({ userId, roleId })
 }
 
 // Booking Test -----------------------------------
