@@ -87,46 +87,26 @@ describe('UserRoleRepository [findUserRoleByUserId]', () => {
 
 })
 
-describe('UserRoleRepository [createUserRole]', () => {
+describe('UserRoleRepository [addUserRole]', () => {
   // User status, soft deletion, and role activity are application policies.
   // The service evaluates them using UserRepository and RoleRepository before
   // calling this persistence operation.
-  it('returns role ids and assigns roles to user', async ({ userRoleRepository }) => {
+  it('returns role id and assigns role to user', async ({ userRoleRepository }) => {
     // Arrange
     const testUser = await createTestUser()
-    const roleTestIds = [(await createTestRole()).id, (await createTestRole()).id]
+    const testRole = await createTestRole()
 
     // Act
-    const roleIds = await userRoleRepository.createUserRole(testUser.id, roleTestIds)
+    const roleId = await userRoleRepository.addUserRole(testUser.id, testRole.id)
 
     // Assert
-    expect(roleIds).toHaveLength(roleTestIds.length)
-    expect(roleIds).toEqual(expect.arrayContaining(roleTestIds))
+    expect(roleId).toBe(testRole.id)
     // Assert side effects
     const rowResult = await query(
       `SELECT role_id FROM user_roles WHERE user_id=$1`,
       [testUser.id]
     )
-    const roleIdsInDb = rowResult.rows.map(row => Number(row.role_id))
-    expect(roleIdsInDb).toHaveLength(roleTestIds.length)
-    expect(roleIdsInDb).toEqual(expect.arrayContaining(roleTestIds))
-  })
-
-  it('returns empty list and does not assign roles when given empty role ids', async ({ userRoleRepository }) => {
-    // Arrange
-    const testUser = await createTestUser()
-
-    // Act
-    const roleIds = await userRoleRepository.createUserRole(testUser.id, [])
-
-    // Assert
-    expect(roleIds).toEqual([])
-    // Assert side effects
-    const rowResult = await query(
-      `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
-    )
-    expect(rowResult.rows).toEqual([])
+    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([testRole.id])
   })
 
   it('rejects with a foreign-key constraint error when userId does not exist', async ({ userRoleRepository }) => {
@@ -135,7 +115,7 @@ describe('UserRoleRepository [createUserRole]', () => {
     const testRole = await createTestRole()
 
     // Act
-    const rolePromise = userRoleRepository.createUserRole(nonExistentUserId, [testRole.id])
+    const rolePromise = userRoleRepository.addUserRole(nonExistentUserId, testRole.id)
 
     // Assert
     await expectRepositoryError(rolePromise, {
@@ -157,7 +137,7 @@ describe('UserRoleRepository [createUserRole]', () => {
     await query(`DELETE FROM roles WHERE id=$1`, [deletedRole.id])
 
     // Act
-    const rolePromise = userRoleRepository.createUserRole(testUser.id, [deletedRole.id])
+    const rolePromise = userRoleRepository.addUserRole(testUser.id, deletedRole.id)
 
     // Assert
     await expectRepositoryError(rolePromise, {
@@ -171,76 +151,22 @@ describe('UserRoleRepository [createUserRole]', () => {
     )
     expect(rowResult.rows).toEqual([])
   })
-})
 
-describe('UserRoleRepository [updateUserRole]', () => {
-  it('returns new role ids and replaces roles assigned to user', async ({ userRoleRepository }) => {
+  it('rejects with a unique constraint error when role is already assigned', async ({ userRoleRepository }) => {
     // Arrange
     const testUser = await createTestUser()
-    const oldRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
-    const newRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
-    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: oldRoleIds })
+    const testRole = await createTestRole()
+    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: [testRole.id] })
 
     // Act
-    const roleIds = await userRoleRepository.updateUserRole(testUser.id, newRoleIds)
-
-    // Assert
-    expect(roleIds).toHaveLength(newRoleIds.length)
-    expect(roleIds).toEqual(expect.arrayContaining(newRoleIds))
-    // Assert side effects
-    const rowResult = await query(
-      `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
-    )
-    const roleIdsInDb = rowResult.rows.map(row => Number(row.role_id))
-    expect(roleIdsInDb).toHaveLength(newRoleIds.length)
-    expect(roleIdsInDb).toEqual(expect.arrayContaining(newRoleIds))
-    expect(roleIdsInDb).not.toEqual(expect.arrayContaining(oldRoleIds))
-  })
-
-  it('returns empty list and removes all roles when given empty role ids', async ({ userRoleRepository }) => {
-    // Arrange
-    const testUser = await createTestUser()
-    const oldRoleIds = [(await createTestRole()).id, (await createTestRole()).id]
-    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: oldRoleIds })
-
-    // Act
-    const roleIds = await userRoleRepository.updateUserRole(testUser.id, [])
-
-    // Assert
-    expect(roleIds).toEqual([])
-    // Assert side effects
-    const rowResult = await query(
-      `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
-    )
-    expect(rowResult.rows).toEqual([])
-  })
-
-  it('rejects with a foreign-key constraint error and keeps old roles when roleId does not exist', async ({ userRoleRepository }) => {
-    // Arrange
-    const testUser = await createTestUser()
-    const oldRole = await createTestRole()
-    const deletedRole = await createTestRole()
-    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: [oldRole.id] })
-    await query(`DELETE FROM roles WHERE id=$1`, [deletedRole.id])
-
-    // Act
-    const rolePromise = userRoleRepository.updateUserRole(testUser.id, [deletedRole.id])
+    const rolePromise = userRoleRepository.addUserRole(testUser.id, testRole.id)
 
     // Assert
     await expectRepositoryError(rolePromise, {
-      code: 'FOREIGN_KEY_CONSTRAINT',
-      constraint: 'user_roles_role_fk'
+      code: 'UNIQUE_CONSTRAINT',
+      constraint: 'user_roles_pk'
     })
-    // Assert side effects
-    const rowResult = await query(
-      `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
-    )
-    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
   })
-
 })
 
 describe('UserRoleRepository [deleteUserRole]', () => {
