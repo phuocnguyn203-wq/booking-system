@@ -9,7 +9,7 @@ const it = baseIt.extend('userRoleRepository', () => {
 
 cleanBeforeEachAndAfterAll()
 
-describe('UserRoleRepository [findUserRoleById]', () => {
+describe('UserRoleRepository [findUserRoleByUserId]', () => {
   it('returns list of role ids when given user id', async ({ userRoleRepository }) => {
     // Arrange
     const testUser = await createTestUser()
@@ -18,7 +18,7 @@ describe('UserRoleRepository [findUserRoleById]', () => {
     await createTestUserRoleWrapper({ userId: testUser.id, roleIds: roleTestIds })
 
     // Act
-    const roleIds = await userRoleRepository.findUserRoleById(testUser.id)
+    const roleIds = await userRoleRepository.findUserRoleByUserId(testUser.id)
 
     // Assert
     expect(roleIds).toHaveLength(roleTestIds.length)
@@ -38,7 +38,7 @@ describe('UserRoleRepository [findUserRoleById]', () => {
     await createTestUserRoleWrapper({ userId: testUser.id, roleIds: roleTestIds })
 
     // Act
-    const roleIds = await userRoleRepository.findUserRoleById(testUser.id)
+    const roleIds = await userRoleRepository.findUserRoleByUserId(testUser.id)
 
     // Assert
     expect(roleIds).toEqual([])
@@ -49,7 +49,7 @@ describe('UserRoleRepository [findUserRoleById]', () => {
     const testUser = await createTestUser()
 
     // Act
-    const roleIds = await userRoleRepository.findUserRoleById(testUser.id)
+    const roleIds = await userRoleRepository.findUserRoleByUserId(testUser.id)
 
     // Assert
     expect(roleIds).toEqual([])
@@ -66,7 +66,7 @@ describe('UserRoleRepository [findUserRoleById]', () => {
     })
 
     // Act
-    const roleIds = await userRoleRepository.findUserRoleById(testUser.id)
+    const roleIds = await userRoleRepository.findUserRoleByUserId(testUser.id)
 
     // Assert
     expect(roleIds).toEqual([activeRole.id])
@@ -77,7 +77,7 @@ describe('UserRoleRepository [findUserRoleById]', () => {
     const nonExistentUserId = 100
 
     // Act
-    const roleIds = await userRoleRepository.findUserRoleById(nonExistentUserId)
+    const roleIds = await userRoleRepository.findUserRoleByUserId(nonExistentUserId)
 
     // Assert
     expect(roleIds).toEqual([])
