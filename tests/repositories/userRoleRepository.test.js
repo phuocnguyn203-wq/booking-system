@@ -263,3 +263,40 @@ describe('UserRoleRepository [updateUserRole]', () => {
     expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
   })
 })
+
+describe('UserRoleRepository [deleteUserRole]', () => {
+  it('returns true and deletes role assigned to user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const deletedRole = await createTestRole()
+    const remainingRole = await createTestRole()
+    await createTestUserRoleWrapper({
+      userId: testUser.id,
+      roleIds: [deletedRole.id, remainingRole.id]
+    })
+
+    // Act
+    const isDeleted = await userRoleRepository.deleteUserRole(testUser.id, deletedRole.id)
+
+    // Assert
+    expect(isDeleted).toBe(true)
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([remainingRole.id])
+  })
+
+  it('returns false when role is not assigned to user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const testRole = await createTestRole()
+
+    // Act
+    const isDeleted = await userRoleRepository.deleteUserRole(testUser.id, testRole.id)
+
+    // Assert
+    expect(isDeleted).toBe(false)
+  })
+})
