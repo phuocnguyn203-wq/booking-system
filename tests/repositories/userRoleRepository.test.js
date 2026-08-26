@@ -1,5 +1,6 @@
 import {describe, it as baseIt, expect} from 'vitest'
 import { cleanBeforeEachAndAfterAll, createTestUser, createTestRole, createTestUserRoleWrapper } from './testHelper.js'
+import { expectRepositoryError } from './repositoryTestAssertions.js'
 import UserRoleRepository from '../../src/app/repositories/userRoles.repository.js'
 import { query } from '../../src/database/index.js'
 
@@ -87,6 +88,9 @@ describe('UserRoleRepository [findUserRoleByUserId]', () => {
 })
 
 describe('UserRoleRepository [createUserRole]', () => {
+  // User status, soft deletion, and role activity are application policies.
+  // The service evaluates them using UserRepository and RoleRepository before
+  // calling this persistence operation.
   it('returns role ids and assigns roles to user', async ({ userRoleRepository }) => {
     // Arrange
     const testUser = await createTestUser()
@@ -125,41 +129,40 @@ describe('UserRoleRepository [createUserRole]', () => {
     expect(rowResult.rows).toEqual([])
   })
 
-  it('throws AppError and does not assign roles when user is suspended', async ({ userRoleRepository }) => {
+  it('rejects with a foreign-key constraint error when userId does not exist', async ({ userRoleRepository }) => {
     // Arrange
-    const testUser = await createTestUser({ status: 'suspended' })
+    const nonExistentUserId = 999999
     const testRole = await createTestRole()
 
     // Act
-    const rolePromise = userRoleRepository.createUserRole(testUser.id, [testRole.id])
+    const rolePromise = userRoleRepository.createUserRole(nonExistentUserId, [testRole.id])
 
     // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 409,
-      code: 'USER_SUSPENDED',
-      message: 'Cannot assign roles to a suspended user'
+    await expectRepositoryError(rolePromise, {
+      code: 'FOREIGN_KEY_CONSTRAINT',
+      constraint: 'user_roles_user_fk'
     })
     // Assert side effects
     const rowResult = await query(
       `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
+      [nonExistentUserId]
     )
     expect(rowResult.rows).toEqual([])
   })
 
-  it('throws AppError and does not assign roles when user is deleted', async ({ userRoleRepository }) => {
+  it('rejects with a foreign-key constraint error when roleId does not exist', async ({ userRoleRepository }) => {
     // Arrange
-    const testUser = await createTestUser({ isDeleted: true })
-    const testRole = await createTestRole()
+    const testUser = await createTestUser()
+    const deletedRole = await createTestRole()
+    await query(`DELETE FROM roles WHERE id=$1`, [deletedRole.id])
 
     // Act
-    const rolePromise = userRoleRepository.createUserRole(testUser.id, [testRole.id])
+    const rolePromise = userRoleRepository.createUserRole(testUser.id, [deletedRole.id])
 
     // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 400,
-      code: 'USER_NON_EXISTENT',
-      message: 'User does not exist'
+    await expectRepositoryError(rolePromise, {
+      code: 'FOREIGN_KEY_CONSTRAINT',
+      constraint: 'user_roles_role_fk'
     })
     // Assert side effects
     const rowResult = await query(
@@ -214,7 +217,7 @@ describe('UserRoleRepository [updateUserRole]', () => {
     expect(rowResult.rows).toEqual([])
   })
 
-  it('throws AppError and keeps old roles when given non-existent role id', async ({ userRoleRepository }) => {
+  it('rejects with a foreign-key constraint error and keeps old roles when roleId does not exist', async ({ userRoleRepository }) => {
     // Arrange
     const testUser = await createTestUser()
     const oldRole = await createTestRole()
@@ -226,10 +229,9 @@ describe('UserRoleRepository [updateUserRole]', () => {
     const rolePromise = userRoleRepository.updateUserRole(testUser.id, [deletedRole.id])
 
     // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 400,
-      code: 'ROLE_NON_EXISTENT',
-      message: 'Role does not exist'
+    await expectRepositoryError(rolePromise, {
+      code: 'FOREIGN_KEY_CONSTRAINT',
+      constraint: 'user_roles_role_fk'
     })
     // Assert side effects
     const rowResult = await query(
@@ -239,29 +241,6 @@ describe('UserRoleRepository [updateUserRole]', () => {
     expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
   })
 
-  it('throws AppError and keeps old roles when given inactive role id', async ({ userRoleRepository }) => {
-    // Arrange
-    const testUser = await createTestUser()
-    const oldRole = await createTestRole()
-    const inactiveRole = await createTestRole({ isActive: false })
-    await createTestUserRoleWrapper({ userId: testUser.id, roleIds: [oldRole.id] })
-
-    // Act
-    const rolePromise = userRoleRepository.updateUserRole(testUser.id, [inactiveRole.id])
-
-    // Assert
-    await expect(rolePromise).rejects.toMatchObject({
-      statusCode: 409,
-      code: 'ROLE_INACTIVE',
-      message: 'Cannot assign an inactive role'
-    })
-    // Assert side effects
-    const rowResult = await query(
-      `SELECT role_id FROM user_roles WHERE user_id=$1`,
-      [testUser.id]
-    )
-    expect(rowResult.rows.map(row => Number(row.role_id))).toEqual([oldRole.id])
-  })
 })
 
 describe('UserRoleRepository [deleteUserRole]', () => {
