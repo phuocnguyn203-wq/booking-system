@@ -85,3 +85,87 @@ describe('UserRoleRepository [findUserRoleById]', () => {
 
 
 })
+
+describe('UserRoleRepository [createUserRole]', () => {
+  it('returns role ids and assigns roles to user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const roleTestIds = [(await createTestRole()).id, (await createTestRole()).id]
+
+    // Act
+    const roleIds = await userRoleRepository.createUserRole(testUser.id, roleTestIds)
+
+    // Assert
+    expect(roleIds).toHaveLength(roleTestIds.length)
+    expect(roleIds).toEqual(expect.arrayContaining(roleTestIds))
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    const roleIdsInDb = rowResult.rows.map(row => Number(row.role_id))
+    expect(roleIdsInDb).toHaveLength(roleTestIds.length)
+    expect(roleIdsInDb).toEqual(expect.arrayContaining(roleTestIds))
+  })
+
+  it('returns empty list and does not assign roles when given empty role ids', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+
+    // Act
+    const roleIds = await userRoleRepository.createUserRole(testUser.id, [])
+
+    // Assert
+    expect(roleIds).toEqual([])
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows).toEqual([])
+  })
+
+  it('throws AppError and does not assign roles when user is suspended', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ status: 'suspended' })
+    const testRole = await createTestRole()
+
+    // Act
+    const rolePromise = userRoleRepository.createUserRole(testUser.id, [testRole.id])
+
+    // Assert
+    await expect(rolePromise).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'USER_SUSPENDED',
+      message: 'Cannot assign roles to a suspended user'
+    })
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows).toEqual([])
+  })
+
+  it('throws AppError and does not assign roles when user is deleted', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ isDeleted: true })
+    const testRole = await createTestRole()
+
+    // Act
+    const rolePromise = userRoleRepository.createUserRole(testUser.id, [testRole.id])
+
+    // Assert
+    await expect(rolePromise).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'USER_NON_EXISTENT',
+      message: 'User does not exist'
+    })
+    // Assert side effects
+    const rowResult = await query(
+      `SELECT role_id FROM user_roles WHERE user_id=$1`,
+      [testUser.id]
+    )
+    expect(rowResult.rows).toEqual([])
+  })
+})
