@@ -1,5 +1,4 @@
-import Errors from '../errors/errorDefinitions.js';
-import createAppError from '../errors/AppError.js';
+import RepositoryError from '../errors/RepositoryError.js'
 
 export function mapRowToBooking(row) {
   return {
@@ -11,6 +10,49 @@ export function mapRowToBooking(row) {
     status: row.status
   }
 }
+
+function mapDatabaseError(error) {
+  if (error instanceof RepositoryError)
+    return error
+
+  if (error.code === '23505') {
+    return new RepositoryError('UNIQUE_CONSTRAINT', {
+      constraint: error.constraint,
+      cause: error
+    })
+  }
+
+  if (error.code === '23502') {
+    return new RepositoryError('NOT_NULL_CONSTRAINT', {
+      column: error.column,
+      cause: error
+    })
+  }
+
+  if (error.code === '23503') {
+    return new RepositoryError('FOREIGN_KEY_CONSTRAINT', {
+      constraint: error.constraint,
+      cause: error
+    })
+  }
+
+  if (error.code === '23514') {
+    return new RepositoryError('CHECK_CONSTRAINT', {
+      constraint: error.constraint,
+      cause: error
+    })
+  }
+
+  if (error.code === '23P01') {
+    return new RepositoryError('EXCLUSION_CONSTRAINT', {
+      constraint: error.constraint,
+      cause: error
+    })
+  }
+
+  return new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+}
+
 export default class BookingRepository {
   constructor(query) {
     this.query = query
@@ -21,26 +63,35 @@ export default class BookingRepository {
       const rowResult = await this.query(
         `
         SELECT id, user_id, room_id, check_in, check_out, status
-        FROM bookings WHERE id=$1 AND is_deleted=false
+        FROM bookings
+        WHERE id=$1 AND is_deleted=false;
         `,
         [id]
       )
 
-      if (rowResult.rows.length===0)
+      if (rowResult.rows.length === 0)
         return null
+
       return mapRowToBooking(rowResult.rows[0])
     } catch (error) {
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw mapDatabaseError(error)
     }
   }
 
-  async createBooking({ userId, roomId, checkInDate, checkOutDate, status }) {
+  async createBooking(bookingInfo) {
+    const {
+      userId,
+      roomId,
+      checkInDate,
+      checkOutDate,
+      status = 'pending'
+    } = bookingInfo ?? {}
+
     try {
       const rowResult = await this.query(
         `
         INSERT INTO bookings (user_id, room_id, check_in, check_out, status)
-        VALUES
-        ($1, $2, $3, $4, $5)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *;
         `,
         [userId, roomId, checkInDate, checkOutDate, status]
@@ -48,74 +99,70 @@ export default class BookingRepository {
 
       return mapRowToBooking(rowResult.rows[0])
     } catch (error) {
-      // CHECK VALIDATION CONSTRAINT
-      if (error.code==='23514') {
-        if (error.constraint === 'bookings_valid_date')
-          throw createAppError(Errors.INVALID_DATE)
-        if (error.constraint === 'bookings_valid_state')
-          throw createAppError(Errors.INVALID_STATE)
-      }
-      // FOREIGN KEY CONSTRAINT
-      if (error.code==='23503') {
-        if (error.constraint === 'bookings_room_fk')
-          throw createAppError(Errors.ROOM_NON_EXISTENT)
-        if (error.constraint === 'bookings_user_fk')
-          throw createAppError(Errors.USER_NON_EXISTENT)
-      }
-
-      // DATABASE ERROR
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
-    }
-
-  }
-  
-  async deleteById(id) {
-    try {
-      const rowResult = await this.query(
-        `
-        UPDATE bookings SET is_deleted=true 
-        WHERE id=$1 AND (is_deleted IS NULL OR is_deleted IS false) 
-        `,
-        [id]
-      )
-      return rowResult.rowCount > 0
-    } catch (error) {
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw mapDatabaseError(error)
     }
   }
 
   async updateBooking(id, updateInfo) {
-    const allowedFields = new Set([
-      'check_in', 'check_out', 'status'
+    const interfaceMap = new Map([
+      ['checkInDate', 'check_in'],
+      ['check_in', 'check_in'],
+      ['checkOutDate', 'check_out'],
+      ['check_out', 'check_out'],
+      ['status', 'status']
     ])
 
-    const entries = Object.entries(updateInfo).filter(
-      ([key, value]) => allowedFields.has(key) && value !== undefined
-    )
+    const mappedFields = new Map()
+    for (const [key, value] of Object.entries(updateInfo ?? {})) {
+      if (interfaceMap.has(key) && value !== undefined)
+        mappedFields.set(interfaceMap.get(key), value)
+    }
 
-    if (entries.length===0)
-      throw createAppError(Errors.NO_VALID_FIELDS)
+    const entries = Array.from(mappedFields.entries())
+    if (entries.length === 0)
+      throw new RepositoryError('NO_UPDATABLE_FIELDS')
 
     const values = []
-    const setClause = entries.map(([key, value]) => {
+    const setClause = entries.map(([column, value]) => {
       values.push(value)
-      return `${key}=$${values.length}`
+      return `${column}=$${values.length}`
     })
     values.push(id)
 
-    const rowResult = await this.query(
-      `
-      UPDATE bookings SET ${setClause.join(', ')}
-      WHERE id=$${values.length} AND is_deleted=false
-      RETURNING *;
-      `,
-      values
-    )
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE bookings
+        SET ${setClause.join(', ')}
+        WHERE id=$${values.length} AND is_deleted=false
+        RETURNING *;
+        `,
+        values
+      )
 
-    if (rowResult.rows.length === 0)
-      return null
-    return rowResult.rows[0]
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToBooking(rowResult.rows[0])
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
+  async deleteById(id) {
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE bookings
+        SET is_deleted=true
+        WHERE id=$1 AND is_deleted=false;
+        `,
+        [id]
+      )
+
+      return rowResult.rowCount > 0
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
   }
 }
