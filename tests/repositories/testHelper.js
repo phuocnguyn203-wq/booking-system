@@ -216,7 +216,8 @@ export async function createTestBooking({
     userId: Number(booking.user_id),
     roomId: Number(booking.room_id),
     checkInDate: booking.check_in,
-    checkOutDate: booking.check_out
+    checkOutDate: booking.check_out,
+    status: booking.status
   }
 }
 
