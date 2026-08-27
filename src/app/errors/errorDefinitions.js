@@ -1,68 +1,8 @@
 const Errors = {
-  ROOM_ALREADY_EXISTS: {
-    statusCode: 409,
-    code: 'ROOM_ALREADY_EXISTS',
-    message: 'Room already exists'
-  },
   DATA_ACCESS_ERROR: {
     statusCode: 500,
-    code: 'INTERNAL ERROR',
+    code: 'INTERNAL_ERROR',
     message: 'Internal error'
-  },
-  NOT_NULL_VALIDATION: {
-    statusCode: 400,
-    code: 'NOT_NULL_VALIDATION',
-    message: 'Required fields are missing'
-  },
-  ROOM_TYPE_DOES_NOT_EXIST: {
-    statusCode: 400,
-    code: 'ROOM_TYPE_DOES_NOT_EXIST',
-    message: 'Room type does not exist'
-  },
-  INVALID_STATUS_ROOM: {
-    statusCode: 400,
-    code: 'INVALID_STATUS_ROOM',
-    message: 'Invalid status room'
-  },
-  ROLE_CODE_UNIQUE_VIOLATION: {
-    statusCode: 409,
-    code: 'ROLE_CODE_UNIQUE_VIOLATION',
-    message: 'A role with this information already exists'
-  },
-  UNIQUE_VALIDATION: {
-    statusCode: 409,
-    code: 'UNIQUE_VALIDATION',
-    message: 'An account with provided information already exists.'
-  },
-  EMAIL_VALIDATION: {
-    statusCode: 400,
-    code: 'EMAIL_VALIDATION',
-    message: 'Email is not valid'
-  },
-  NO_VALID_FIELDS: {
-    statusCode: 400,
-    code: 'NO_VALID_FIELDS',
-    message: 'Field names are not correct.'
-  },
-  INVALID_DATE: {
-    statusCode: 400,
-    code: 'INVALID_DATE',
-    message: 'Check out date can\'t be earlier than check in date'
-  },
-  INVALID_STATE: {
-    statusCOde: 400,
-    code: 'INVALID_STATE',
-    message: 'State must be either pending or completed or cancelled'
-  },
-  ROOM_NON_EXISTENT: {
-    statusCode: 400,
-    code: 'ROOM_NON_EXISTENT',
-    message: 'Room does not exist'
-  },
-  USER_NON_EXISTENT: {
-    statusCode: 400,
-    code: 'USER_NON_EXISTENT',
-    message: 'User does not exist'
   }
 }
 
