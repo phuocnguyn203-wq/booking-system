@@ -1,12 +1,11 @@
-import Errors from '../errors/errorDefinitions.js';
-import createAppError from '../errors/AppError.js';
+import RepositoryError from '../errors/RepositoryError.js';
 
 function mapRowToRoom(row) {
   return {
     id: Number(row.id),
     roomNumber: row.room_number,
     roomTypeId: Number(row.room_type_id),
-    floor: Number(row.floor) || null,
+    floor: row.floor === null ? null : Number(row.floor),
     status: row.status,
     isDeleted: row.is_deleted,
   };
@@ -31,7 +30,7 @@ export default class RoomRepository {
 
       return mapRowToRoom(result.rows[0])
     } catch (error) {
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
     
   }
@@ -43,7 +42,7 @@ export default class RoomRepository {
         roomTypeId,
         floor,
         status
-      } = roomInfo
+      } = roomInfo ?? {}
 
       const result = await this.query(
         `
@@ -57,13 +56,35 @@ export default class RoomRepository {
 
       return mapRowToRoom(result.rows[0])
     } catch (error) {
-      if (error.code === '23502')
-        throw createAppError(Errors.NOT_NULL_VALIDATION)
-      if (error.code === '23503') // Foreign key violation, roomTypeId does not exist
-        throw createAppError(Errors.ROOM_TYPE_DOES_NOT_EXIST)
-      if (error.code === '23514') // Check violation, not valid status
-        throw createAppError(Errors.INVALID_STATUS_ROOM)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      if (error.code === '23503') {
+        throw new RepositoryError('FOREIGN_KEY_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      if (error.code === '23514') {
+        throw new RepositoryError('CHECK_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
@@ -78,35 +99,38 @@ export default class RoomRepository {
       )
       return result.rowCount > 0
     } catch (error) {
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
   async updateRoom(id, updateInfo) {
+    const interfaceMap = new Map([
+      ['roomNumber', 'room_number'],
+      ['room_number', 'room_number'],
+      ['roomTypeId', 'room_type_id'],
+      ['room_type_id', 'room_type_id'],
+      ['floor', 'floor'],
+      ['status', 'status']
+    ])
+
+    const mappedFields = new Map()
+    for (const [key, value] of Object.entries(updateInfo ?? {})) {
+      if (interfaceMap.has(key) && value !== undefined)
+        mappedFields.set(interfaceMap.get(key), value)
+    }
+
+    const entries = Array.from(mappedFields.entries())
+    if (entries.length === 0)
+      throw new RepositoryError('NO_UPDATABLE_FIELDS')
+
+    const values = []
+    const setClause = entries.map(([column, value]) => {
+      values.push(value)
+      return `${column}=$${values.length}`
+    })
+    values.push(id)
+
     try {
-      const allowedFields = new Set([
-        'room_number',
-        'room_type_id',
-        'floor',
-        'status'
-      ])
-
-      const entries = Object.entries(updateInfo).filter(
-        ([key, value]) => allowedFields.has(key) && value !== undefined
-      )
-
-      if (entries.length === 0)
-        throw createAppError(Errors.NO_VALID_FIELDS)
-      
-      const values = []
-      const setClause = entries.map(
-        ([key, value]) => {
-          values.push(value)
-          return `"${key}" = $${values.length}`
-        }
-      )
-      values.push(id)
-
       const query = `
         UPDATE rooms
         SET ${setClause.join(', ')}
@@ -119,7 +143,35 @@ export default class RoomRepository {
         return null
       return mapRowToRoom(result.rows[0])
     } catch (error) {
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      if (error.code === '23503') {
+        throw new RepositoryError('FOREIGN_KEY_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      if (error.code === '23514') {
+        throw new RepositoryError('CHECK_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
     

@@ -121,10 +121,10 @@ describe('RoomRepository [createRoom]', () => {
     }
 
     //Act
-    const roomPromise = roomRepository.createRoom(roomInfo)
+    const room = await roomRepository.createRoom(roomInfo)
     
     // Assert
-    await expect(roomPromise).toMatchObject({
+    expect(room).toMatchObject({
       ...roomInfo,
       floor: null
     })
@@ -192,7 +192,7 @@ describe('RoomRepository [deleteById]', () => {
     expect(rowResult.rows.length).toBe(1)
   })
 
-  it('returns false if it\'s already soft deleted or deleted permanently when given room id', async({ roomRepository }) => {
+  it('returns false when room is already soft deleted', async({ roomRepository }) => {
     // Arrange
     const testRoom = await createTestRoom({ isDeleted: true })
 
@@ -201,6 +201,34 @@ describe('RoomRepository [deleteById]', () => {
 
     // Assert
     expect(is_deleted).toBe(false)
+  })
+
+  it('returns false when room does not exist', async({ roomRepository }) => {
+    // Arrange
+    const nonExistentId = 999999
+
+    // Act
+    const isDeleted = await roomRepository.deleteById(nonExistentId)
+
+    // Assert
+    expect(isDeleted).toBe(false)
+  })
+
+  it('rejects with a data access error when database query fails', async() => {
+    // Arrange
+    const databaseError = new Error('Database unavailable')
+    const failingQuery = async () => {
+      throw databaseError
+    }
+    const roomRepository = new RoomRepository(failingQuery)
+
+    // Act
+    const deletePromise = roomRepository.deleteById(1)
+
+    // Assert
+    await expectRepositoryError(deletePromise, {
+      code: 'DATA_ACCESS_ERROR'
+    })
   })
 })
 
