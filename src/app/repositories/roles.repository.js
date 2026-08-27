@@ -1,5 +1,4 @@
-import createAppError from '../errors/AppError.js'
-import Errors from '../errors/errorDefinitions.js'
+import RepositoryError from '../errors/RepositoryError.js'
 
 function mapRowToRole(row) {
   return {
@@ -31,8 +30,7 @@ export default class RoleRepository {
         return null
       return mapRowToRole(rowResult.rows[0])
     } catch (error) {
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
@@ -41,7 +39,7 @@ export default class RoleRepository {
       code,
       name,
       description=null
-    } = roleInfo
+    } = roleInfo ?? {}
     try {
       const rowResult = await this.query(
         `
@@ -55,13 +53,21 @@ export default class RoleRepository {
 
       return mapRowToRole(rowResult.rows[0])
     } catch (error) {
-      if (error.code === '23505')
-        throw createAppError(Errors.ROLE_CODE_UNIQUE_VIOLATION)
-      if (error.code === '23502')
-        throw createAppError(Errors.NOT_NULL_VALIDATION)
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
 
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
@@ -82,7 +88,7 @@ export default class RoleRepository {
       })
     
     if (entries.length === 0)
-      throw createAppError(Errors.NO_VALID_FIELDS)
+      throw new RepositoryError('NO_UPDATABLE_FIELDS')
 
     const values = []
     const setClause = entries.map(([key, value]) => {
@@ -96,7 +102,7 @@ export default class RoleRepository {
         `
         UPDATE roles SET ${setClause.join(', ')}
         WHERE id=$${values.length}
-        RETURNING code, name, description, is_active
+        RETURNING id, code, name, description, is_active
         `
         ,values
       )
@@ -105,13 +111,21 @@ export default class RoleRepository {
         return null
       return mapRowToRole(rowResult.rows[0])
     } catch (error) {
-      if (error.code === '23505')
-        throw createAppError(Errors.ROLE_CODE_UNIQUE_VIOLATION)
-      if (error.code === '23502')
-        throw createAppError(Errors.NOT_NULL_VALIDATION)
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
 
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
 
   }
