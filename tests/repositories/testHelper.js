@@ -160,8 +160,8 @@ export async function createTestUser(overrides = {}) {
     username: row.username,
     phone: row.phone,
     status: row.status,
-    emailVerifiedAt: row.status || null,
-    isDeleted: row.isDeleted
+    emailVerifiedAt: row.email_verified_at,
+    isDeleted: row.is_deleted
   }
 }
 

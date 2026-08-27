@@ -1,5 +1,4 @@
-import createAppError from '../errors/AppError.js'
-import Errors from '../errors/errorDefinitions.js'
+import RepositoryError from '../errors/RepositoryError.js'
 
 function mapRowToUser(row) {
   return {
@@ -9,8 +8,8 @@ function mapRowToUser(row) {
     username: row.username,
     phone: row.phone,
     status: row.status,
-    emailVerifiedAt: row.status || null,
-    isDeleted: row.isDeleted
+    emailVerifiedAt: row.email_verified_at,
+    isDeleted: row.is_deleted
   }
 }
 
@@ -34,7 +33,7 @@ export default class UserRepository {
       return mapRowToUser(rowResult.rows[0])
 
     } catch (error) {
-      throw createAppError(error)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
@@ -47,7 +46,7 @@ export default class UserRepository {
         hashedPassword,
         phone,
         status
-      } = userInfo
+      } = userInfo ?? {}
 
       const rowResult = await this.query(
       `
@@ -61,21 +60,35 @@ export default class UserRepository {
       return mapRowToUser(rowResult.rows[0])
 
     } catch (error) {
-      switch (error.code){
-        case '23502': throw createAppError(Errors.NOT_NULL_VALIDATION);
-        case '23505': throw createAppError(Errors.UNIQUE_VALIDATION);
-        case '23514': throw createAppError(Errors.EMAIL_VALIDATION);
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
       }
 
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      if (error.code === '23514') {
+        throw new RepositoryError('CHECK_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 
   async updateUser(id, updateInfo) {
-
     const interfaceMap = new Map([
       ['fullName', 'fullname'],
+      ['fullname', 'fullname'],
       ['email', 'email'],
       ['phone', 'phone'],
       ['status', 'status'],
@@ -83,37 +96,23 @@ export default class UserRepository {
       ['hashedPassword', 'hashed_password']
     ])
 
-    for (const [key, value] of Object.entries(updateInfo)) {
-      if (interfaceMap.has(key))
-        updateInfo[interfaceMap.get(key)] = value
-      else {
-        delete updateInfo[key]
-      }
+    const mappedFields = new Map()
+    for (const [key, value] of Object.entries(updateInfo ?? {})) {
+      if (interfaceMap.has(key) && value !== undefined)
+        mappedFields.set(interfaceMap.get(key), value)
     }
 
-    console.log(updateInfo)
-
-    const allowedFields = new Set([
-      'email', 
-      'fullname',
-      'phone',
-      'status',
-      'email_verified_at',
-      'hashed_password'
-    ])
-    
-    const entries = Object.entries(updateInfo).filter(
-      ([key, value]) => allowedFields.has(key) && value !== undefined
-    )
+    const entries = Array.from(mappedFields.entries())
     if (entries.length === 0)
-      throw createAppError(Errors.NO_VALID_FIELDS)
+      throw new RepositoryError('NO_UPDATABLE_FIELDS')
 
-    const setClause = []
-    const values = entries.map(([key, value]) => {
-      setClause.push(`${key}=$${setClause.length+1}`)
-      return value
+    const values = []
+    const setClause = entries.map(([column, value]) => {
+      values.push(value)
+      return `${column}=$${values.length}`
     })
     values.push(id)
+
     try {
       const rowResult = await this.query(
         `
@@ -128,20 +127,45 @@ export default class UserRepository {
         return null
       return mapRowToUser(rowResult.rows[0])  
     } catch (error) {
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      if (error.code === '23505') {
+        throw new RepositoryError('UNIQUE_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      if (error.code === '23502') {
+        throw new RepositoryError('NOT_NULL_CONSTRAINT', {
+          column: error.column,
+          cause: error
+        })
+      }
+
+      if (error.code === '23514') {
+        throw new RepositoryError('CHECK_CONSTRAINT', {
+          constraint: error.constraint,
+          cause: error
+        })
+      }
+
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
-  
   }
 
   async deleteUser(id) {
-    try{
-      const rowResult = await this.query(`UPDATE users SET is_deleted=true WHERE id=$1 AND is_deleted=false`, [id])
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE users
+        SET is_deleted=true
+        WHERE id=$1 AND is_deleted=false;
+        `,
+        [id]
+      )
       
       return rowResult.rowCount > 0
     } catch (error) {
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
-
   }
 }
