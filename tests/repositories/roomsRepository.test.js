@@ -2,6 +2,7 @@ import { expect, describe } from "vitest";
 import { it as baseIt } from 'vitest'
 import { query } from "../../src/database/index.js"
 import { cleanBeforeEachAndAfterAll, createTestRoom, createTestRoomType } from "./testHelper.js";
+import { expectRepositoryError } from "./repositoryTestAssertions.js";
 import RoomRepository from "../../src/app/repositories/rooms.repository.js";
 
 await cleanBeforeEachAndAfterAll()
@@ -75,7 +76,7 @@ describe('RoomRepository [createRoom]', () => {
     expect(newRoomInDb).toMatchObject(newRoomReturned)
   })
 
-  it('doesnot create and raises AppError when not given roomTypeId', async({ roomRepository }) => {
+  it('rejects with a not-null constraint error when status is missing', async({ roomRepository }) => {
     // Arrange
     const roomInfo = {
       roomNumber: 'TEST NUMBER 10',
@@ -87,13 +88,13 @@ describe('RoomRepository [createRoom]', () => {
     const roomPromise = roomRepository.createRoom(roomInfo)
     
     // Assert
-    await expect(roomPromise).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Required fields are missing'
+    await expectRepositoryError(roomPromise, {
+      code: 'NOT_NULL_CONSTRAINT',
+      column: 'status'
     })
   })
 
-  it('doesnot create and raises AppError when not given status', async({ roomRepository }) => {
+  it('rejects with a not-null constraint error when roomTypeId is missing', async({ roomRepository }) => {
     // Arrange
     const roomInfo = {
       roomNumber: 'TEST NUMBER 10',
@@ -105,9 +106,9 @@ describe('RoomRepository [createRoom]', () => {
     const roomPromise = roomRepository.createRoom(roomInfo)
     
     // Assert
-    await expect(roomPromise).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Required fields are missing'
+    await expectRepositoryError(roomPromise, {
+      code: 'NOT_NULL_CONSTRAINT',
+      column: 'room_type_id'
     })
   })
 
@@ -120,7 +121,7 @@ describe('RoomRepository [createRoom]', () => {
     }
 
     //Act
-    const roomPromise = await roomRepository.createRoom(roomInfo)
+    const roomPromise = roomRepository.createRoom(roomInfo)
     
     // Assert
     await expect(roomPromise).toMatchObject({
@@ -129,7 +130,7 @@ describe('RoomRepository [createRoom]', () => {
     })
   })
 
-  it('doesnot create and raises AppError when given non-existent roomTypeId', async ({ roomRepository }) => {
+  it('rejects with a foreign-key constraint error when roomTypeId does not exist', async ({ roomRepository }) => {
     // Arrange
     const nonExistentRoomTypeId = 10
     const roomInfo = {
@@ -143,13 +144,13 @@ describe('RoomRepository [createRoom]', () => {
     const room = roomRepository.createRoom(roomInfo)
 
     // Assert
-    await expect(room).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Room type does not exist'
+    await expectRepositoryError(room, {
+      code: 'FOREIGN_KEY_CONSTRAINT',
+      constraint: 'rooms_room_type_fk'
     })
   })
 
-  it('doesnot create and raises AppError when given invalid status', async ({ roomRepository }) => {
+  it('rejects with a check constraint error when given invalid status', async ({ roomRepository }) => {
     // Arrange
     const invalidStatus = 'Absolute invalid'
     const roomInfo = {
@@ -163,9 +164,9 @@ describe('RoomRepository [createRoom]', () => {
     const room = roomRepository.createRoom(roomInfo)
 
     // Assert
-    await expect(room).rejects.toMatchObject({
-      statusCode: 400,
-      message: 'Invalid status room'
+    await expectRepositoryError(room, {
+      code: 'CHECK_CONSTRAINT',
+      constraint: 'rooms_valid_status'
     })
   })
 })
