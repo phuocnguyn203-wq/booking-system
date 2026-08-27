@@ -2,6 +2,7 @@ import { beforeEach, afterAll } from 'vitest'
 import { query } from '../../src/database/index.js'
 
 const CLEAN_QUERY = `
+  DELETE FROM payments;
   DELETE FROM bookings;
   DELETE FROM user_roles;
   DELETE FROM roles;
@@ -240,4 +241,77 @@ export async function createTestBookingWrapper({
   })
 
   return booking
+}
+
+
+// Payment Test -----------------------------------
+let paymentSequence = 0
+
+export async function createTestPayment(overrides = {}) {
+  const sequence = ++paymentSequence
+  const {
+    bookingId,
+    amount = '150000.00',
+    currency = 'VND',
+    method = 'card',
+    provider = null,
+    providerTransactionId = null,
+    idempotencyKey = `test-payment-${sequence}`,
+    status = 'pending',
+    failureCode = null,
+    failureMessage = null,
+    paidAt = null
+  } = overrides
+
+  const rowResult = await query(
+    `
+    INSERT INTO payments (
+      booking_id,
+      amount,
+      currency,
+      method,
+      provider,
+      provider_transaction_id,
+      idempotency_key,
+      status,
+      failure_code,
+      failure_message,
+      paid_at
+    )
+    VALUES
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    RETURNING *
+    `,
+    [
+      bookingId,
+      amount,
+      currency,
+      method,
+      provider,
+      providerTransactionId,
+      idempotencyKey,
+      status,
+      failureCode,
+      failureMessage,
+      paidAt
+    ]
+  )
+
+  const payment = rowResult.rows[0]
+  return {
+    id: Number(payment.id),
+    bookingId: Number(payment.booking_id),
+    amount: payment.amount,
+    currency: payment.currency,
+    method: payment.method,
+    provider: payment.provider,
+    providerTransactionId: payment.provider_transaction_id,
+    idempotencyKey: payment.idempotency_key,
+    status: payment.status,
+    failureCode: payment.failure_code,
+    failureMessage: payment.failure_message,
+    paidAt: payment.paid_at,
+    createdAt: payment.created_at,
+    updatedAt: payment.updated_at
+  }
 }
