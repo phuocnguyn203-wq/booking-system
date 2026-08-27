@@ -28,6 +28,16 @@ const Errors = {
     statusCode: 409,
     code: 'ROLE_ALREADY_ASSIGNED',
     message: 'Role is already assigned to user'
+  },
+  ROLE_CODE_ALREADY_EXISTS: {
+    statusCode: 409,
+    code: 'ROLE_CODE_ALREADY_EXISTS',
+    message: 'Role code already exists'
+  },
+  NO_ROLE_FIELDS_TO_UPDATE: {
+    statusCode: 400,
+    code: 'NO_ROLE_FIELDS_TO_UPDATE',
+    message: 'No role fields can be updated'
   }
 }
 
