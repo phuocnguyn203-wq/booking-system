@@ -13,6 +13,13 @@ function mapRowToUser(row) {
   }
 }
 
+function mapRowToCredentials(row) {
+  return {
+    id: Number(row.id),
+    hashedPassword: row.hashed_password
+  }
+}
+
 export default class UserRepository {
   constructor(query) {
     this.query = query
@@ -32,6 +39,107 @@ export default class UserRepository {
         return null
       return mapRowToUser(rowResult.rows[0])
 
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
+  }
+
+  async findByUsername(username) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT
+          id,
+          email,
+          fullname,
+          username,
+          phone,
+          status,
+          email_verified_at,
+          is_deleted
+        FROM users
+        WHERE username=$1 AND is_deleted=false;
+        `,
+        [username]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToUser(rowResult.rows[0])
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
+  }
+
+  async findByEmail(email) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT
+          id,
+          email,
+          fullname,
+          username,
+          phone,
+          status,
+          email_verified_at,
+          is_deleted
+        FROM users
+        WHERE email=$1 AND is_deleted=false;
+        `,
+        [email]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToUser(rowResult.rows[0])
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
+  }
+
+  async findCredentialsById(id) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT id, hashed_password
+        FROM users
+        WHERE id=$1 AND is_deleted=false;
+        `,
+        [id]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToCredentials(rowResult.rows[0])
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
+  }
+
+  async findCredentialsByUsername(username) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT id, username, hashed_password, status
+        FROM users
+        WHERE username=$1 AND is_deleted=false;
+        `,
+        [username]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      const row = rowResult.rows[0]
+      return {
+        ...mapRowToCredentials(row),
+        username: row.username,
+        status: row.status
+      }
     } catch (error) {
       throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }

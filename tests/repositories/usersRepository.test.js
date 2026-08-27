@@ -69,6 +69,153 @@ describe('UserRepository [findById]', () => {
   })
 })
 
+describe('UserRepository [findByUsername]', () => {
+  it('returns public user information when username exists', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ username: 'find-by-username' })
+
+    // Act
+    const user = await userRepository.findByUsername(testUser.username)
+
+    // Assert
+    expect(user).toEqual(testUser)
+    expect(user).not.toHaveProperty('hashedPassword')
+  })
+
+  it('returns null when username does not exist', async ({ userRepository }) => {
+    // Arrange
+    const unknownUsername = 'unknown-user'
+
+    // Act
+    const user = await userRepository.findByUsername(unknownUsername)
+
+    // Assert
+    expect(user).toBeNull()
+  })
+
+  it('returns null when user is soft deleted', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({
+      username: 'deleted-username',
+      isDeleted: true
+    })
+
+    // Act
+    const user = await userRepository.findByUsername(testUser.username)
+
+    // Assert
+    expect(user).toBeNull()
+  })
+})
+
+describe('UserRepository [findByEmail]', () => {
+  it('returns public user information when email exists', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ email: 'find-by-email@example.com' })
+
+    // Act
+    const user = await userRepository.findByEmail(testUser.email)
+
+    // Assert
+    expect(user).toEqual(testUser)
+    expect(user).not.toHaveProperty('hashedPassword')
+  })
+
+  it('returns null when email does not exist', async ({ userRepository }) => {
+    // Arrange
+    const unknownEmail = 'unknown@example.com'
+
+    // Act
+    const user = await userRepository.findByEmail(unknownEmail)
+
+    // Assert
+    expect(user).toBeNull()
+  })
+
+  it('returns null when user is soft deleted', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({
+      email: 'deleted-email@example.com',
+      isDeleted: true
+    })
+
+    // Act
+    const user = await userRepository.findByEmail(testUser.email)
+
+    // Assert
+    expect(user).toBeNull()
+  })
+})
+
+describe('UserRepository [findCredentialsById]', () => {
+  it('returns only credentials needed to change password', async ({ userRepository }) => {
+    // Arrange
+    const hashedPassword = 'stored-password-hash'
+    const testUser = await createTestUser({ hashedPassword })
+
+    // Act
+    const credentials = await userRepository.findCredentialsById(testUser.id)
+
+    // Assert
+    expect(credentials).toEqual({
+      id: testUser.id,
+      hashedPassword
+    })
+  })
+
+  it('returns null when user does not exist or is soft deleted', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ isDeleted: true })
+
+    // Act
+    const credentials = await userRepository.findCredentialsById(testUser.id)
+
+    // Assert
+    expect(credentials).toBeNull()
+  })
+})
+
+describe('UserRepository [findCredentialsByUsername]', () => {
+  it('returns authentication credentials when username exists', async ({ userRepository }) => {
+    // Arrange
+    const hashedPassword = 'login-password-hash'
+    const testUser = await createTestUser({
+      username: 'login-user',
+      hashedPassword,
+      status: 'active'
+    })
+
+    // Act
+    const credentials = await userRepository.findCredentialsByUsername(
+      testUser.username
+    )
+
+    // Assert
+    expect(credentials).toEqual({
+      id: testUser.id,
+      username: testUser.username,
+      hashedPassword,
+      status: testUser.status
+    })
+  })
+
+  it('returns null when username does not exist or user is soft deleted', async ({ userRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({
+      username: 'deleted-login-user',
+      isDeleted: true
+    })
+
+    // Act
+    const credentials = await userRepository.findCredentialsByUsername(
+      testUser.username
+    )
+
+    // Assert
+    expect(credentials).toBeNull()
+  })
+})
+
 describe('UserRepository [createUser]', () => {
   it('returns and adds user to database when given valid user information', async ({ userRepository }) => {
     // Arrange
