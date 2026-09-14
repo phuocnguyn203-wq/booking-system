@@ -34,6 +34,31 @@ const Errors = {
     code: 'ROLE_CODE_ALREADY_EXISTS',
     message: 'Role code already exists'
   },
+  ROOM_NOT_FOUND: {
+    statusCode: 404,
+    code: 'ROOM_NOT_FOUND',
+    message: 'Room does not exist'
+  },
+  ROOM_TYPE_NOT_FOUND: {
+    statusCode: 404,
+    code: 'ROOM_TYPE_NOT_FOUND',
+    message: 'Room type does not exist'
+  },
+  ROOM_NUMBER_ALREADY_EXISTS: {
+    statusCode: 409,
+    code: 'ROOM_NUMBER_ALREADY_EXISTS',
+    message: 'Room number already exists'
+  },
+  INVALID_ROOM_DATA: {
+    statusCode: 400,
+    code: 'INVALID_ROOM_DATA',
+    message: 'Room data is invalid'
+  },
+  NO_ROOM_FIELDS_TO_UPDATE: {
+    statusCode: 400,
+    code: 'NO_ROOM_FIELDS_TO_UPDATE',
+    message: 'No room fields can be updated'
+  },
   NO_ROLE_FIELDS_TO_UPDATE: {
     statusCode: 400,
     code: 'NO_ROLE_FIELDS_TO_UPDATE',
