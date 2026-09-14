@@ -55,6 +55,18 @@ const Errors = {
     code: 'BOOKING_NOT_FOUND',
     message: 'Booking does not exist'
   },
+  INVALID_BOOKING_DATA: {
+    code: 'INVALID_BOOKING_DATA',
+    message: 'Booking data is invalid'
+  },
+  NO_BOOKING_FIELDS_TO_UPDATE: {
+    code: 'NO_BOOKING_FIELDS_TO_UPDATE',
+    message: 'No booking fields can be updated'
+  },
+  BOOKING_DATES_OVERLAP: {
+    code: 'BOOKING_DATES_OVERLAP',
+    message: 'Booking dates overlap with an active booking'
+  },
   PAYMENT_REQUEST_ALREADY_EXISTS: {
     code: 'PAYMENT_REQUEST_ALREADY_EXISTS',
     message: 'Payment request already exists'
