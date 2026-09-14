@@ -47,6 +47,26 @@ const Errors = {
     code: 'NO_ROOM_FIELDS_TO_UPDATE',
     message: 'No room fields can be updated'
   },
+  PAYMENT_NOT_FOUND: {
+    code: 'PAYMENT_NOT_FOUND',
+    message: 'Payment does not exist'
+  },
+  BOOKING_NOT_FOUND: {
+    code: 'BOOKING_NOT_FOUND',
+    message: 'Booking does not exist'
+  },
+  PAYMENT_REQUEST_ALREADY_EXISTS: {
+    code: 'PAYMENT_REQUEST_ALREADY_EXISTS',
+    message: 'Payment request already exists'
+  },
+  PAYMENT_TRANSACTION_ALREADY_EXISTS: {
+    code: 'PAYMENT_TRANSACTION_ALREADY_EXISTS',
+    message: 'Payment transaction already exists'
+  },
+  INVALID_PAYMENT_DATA: {
+    code: 'INVALID_PAYMENT_DATA',
+    message: 'Payment data is invalid'
+  },
   NO_ROLE_FIELDS_TO_UPDATE: {
     code: 'NO_ROLE_FIELDS_TO_UPDATE',
     message: 'No role fields can be updated'
