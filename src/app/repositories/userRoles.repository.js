@@ -1,5 +1,3 @@
-import createAppError from '../errors/AppError.js'
-import Errors from '../errors/errorDefinitions.js'
 import RepositoryError from '../errors/RepositoryError.js'
 
 export default class UserRoleRepository{
@@ -24,8 +22,7 @@ export default class UserRoleRepository{
       const roleIds = rowResult.rows.map(row => Number(row.role_id))
       return roleIds
     } catch (error) {
-      console.log(error)
-      throw createAppError(Errors.DATA_ACCESS_ERROR)
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
   }
 

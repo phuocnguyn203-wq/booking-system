@@ -59,7 +59,6 @@ describe('RoomService [getRoomById]', () => {
     roomRepository.findById.mockResolvedValue(null)
 
     await expectAppError(roomService.getRoomById(999999), {
-      statusCode: 404,
       code: 'ROOM_NOT_FOUND'
     })
   })
@@ -154,7 +153,6 @@ describe('RoomService [updateRoom]', () => {
     { label: 'only undefined values', updateInfo: { roomNumber: undefined, roomTypeId: undefined, floor: undefined, status: undefined } }
   ])('rejects $label without calling the repository', async ({ updateInfo }) => {
     await expectAppError(roomService.updateRoom(activeRoom.id, updateInfo), {
-      statusCode: 400,
       code: 'NO_ROOM_FIELDS_TO_UPDATE'
     })
     expect(roomRepository.updateRoom).not.toHaveBeenCalled()
@@ -164,7 +162,6 @@ describe('RoomService [updateRoom]', () => {
     roomRepository.updateRoom.mockResolvedValue(null)
 
     await expectAppError(roomService.updateRoom(999999, { status: 'maintenance' }), {
-      statusCode: 404,
       code: 'ROOM_NOT_FOUND'
     })
   })
@@ -175,7 +172,6 @@ describe('RoomService [updateRoom]', () => {
     )
 
     await expectAppError(roomService.updateRoom(activeRoom.id, { floor: 2 }), {
-      statusCode: 400,
       code: 'NO_ROOM_FIELDS_TO_UPDATE'
     })
   })
@@ -207,37 +203,37 @@ describe.each(['createRoom', 'updateRoom'])('RoomService [%s constraint errors]'
       label: 'duplicate room number',
       repositoryCode: 'UNIQUE_CONSTRAINT',
       details: { constraint: 'rooms_room_number_key' },
-      expected: { statusCode: 409, code: 'ROOM_NUMBER_ALREADY_EXISTS' }
+      expected: { code: 'ROOM_NUMBER_ALREADY_EXISTS' }
     },
     {
       label: 'missing room type',
       repositoryCode: 'FOREIGN_KEY_CONSTRAINT',
       details: { constraint: 'rooms_room_type_fk' },
-      expected: { statusCode: 404, code: 'ROOM_TYPE_NOT_FOUND' }
+      expected: { code: 'ROOM_TYPE_NOT_FOUND' }
     },
     ...['room_number', 'room_type_id', 'status'].map(column => ({
       label: `null ${column}`,
       repositoryCode: 'NOT_NULL_CONSTRAINT',
       details: { column },
-      expected: { statusCode: 400, code: 'INVALID_ROOM_DATA' }
+      expected: { code: 'INVALID_ROOM_DATA' }
     })),
     {
       label: 'invalid status',
       repositoryCode: 'CHECK_CONSTRAINT',
       details: { constraint: 'rooms_valid_status' },
-      expected: { statusCode: 400, code: 'INVALID_ROOM_DATA' }
+      expected: { code: 'INVALID_ROOM_DATA' }
     },
     {
       label: 'an unrelated unique constraint',
       repositoryCode: 'UNIQUE_CONSTRAINT',
       details: { constraint: 'unrelated_unique_key' },
-      expected: { statusCode: 500, code: 'INTERNAL_ERROR' }
+      expected: { code: 'INTERNAL_ERROR' }
     },
     {
       label: 'an unrelated foreign key constraint',
       repositoryCode: 'FOREIGN_KEY_CONSTRAINT',
       details: { constraint: 'unrelated_fk' },
-      expected: { statusCode: 500, code: 'INTERNAL_ERROR' }
+      expected: { code: 'INTERNAL_ERROR' }
     }
   ])('maps $label to an AppError', async ({ repositoryCode, details, expected }) => {
     // Arrange
@@ -267,7 +263,6 @@ describe.each([
       )
 
       await expectAppError(roomService[method](...args()), {
-        statusCode: 500,
         code: 'INTERNAL_ERROR',
         message: 'Internal error'
       })
@@ -275,7 +270,7 @@ describe.each([
   )
 
   it('preserves an existing AppError', async () => {
-    const error = new AppError('Room operation unavailable', 409, 'ROOM_OPERATION_UNAVAILABLE')
+    const error = new AppError('Room operation unavailable', 'ROOM_OPERATION_UNAVAILABLE')
     roomRepository[repositoryMethod].mockRejectedValue(error)
 
     await expect(roomService[method](...args())).rejects.toBe(error)

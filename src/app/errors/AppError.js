@@ -1,12 +1,12 @@
 export class AppError extends Error {
-  constructor(message, statusCode, code) {
+  constructor(message, code) {
     super(message)
-    this.statusCode= statusCode
+    this.name = 'AppError'
     this.code = code
   }
 }
 
 export default function createAppError(error) {
-  return new AppError(error.message, error.statusCode, error.code)
+  return new AppError(error.message, error.code)
 }
 

@@ -60,7 +60,6 @@ describe('RoleService [getRoleById]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 404,
       code: 'ROLE_NOT_FOUND'
     })
   })
@@ -76,7 +75,6 @@ describe('RoleService [getRoleById]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -117,7 +115,6 @@ describe('RoleService [createRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 409,
       code: 'ROLE_CODE_ALREADY_EXISTS'
     })
   })
@@ -136,7 +133,6 @@ describe('RoleService [createRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -189,7 +185,6 @@ describe('RoleService [updateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 400,
       code: 'NO_ROLE_FIELDS_TO_UPDATE'
     })
     expect(roleRepository.updateRole).not.toHaveBeenCalled()
@@ -206,7 +201,6 @@ describe('RoleService [updateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 404,
       code: 'ROLE_NOT_FOUND'
     })
   })
@@ -224,7 +218,6 @@ describe('RoleService [updateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -276,7 +269,6 @@ describe('RoleService [deactivateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 404,
       code: 'ROLE_NOT_FOUND'
     })
     expect(roleRepository.updateRole).not.toHaveBeenCalled()
@@ -292,7 +284,6 @@ describe('RoleService [deactivateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 404,
       code: 'ROLE_NOT_FOUND'
     })
   })
@@ -308,7 +299,6 @@ describe('RoleService [deactivateRole]', () => {
 
     // Assert
     await expectAppError(rolePromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })

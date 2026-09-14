@@ -9,4 +9,5 @@ export async function expectAppError(promise, expected) {
 
   expect(error, 'Expected service operation to reject').toBeInstanceOf(AppError)
   expect(error).toMatchObject(expected)
+  expect(error).not.toHaveProperty('statusCode')
 }

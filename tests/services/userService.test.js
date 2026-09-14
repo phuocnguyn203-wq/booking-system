@@ -60,7 +60,6 @@ describe('UserService [getUserById]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
   })
@@ -76,7 +75,6 @@ describe('UserService [getUserById]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -106,7 +104,6 @@ describe('UserService [getUserByUsername]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
   })
@@ -134,7 +131,6 @@ describe('UserService [getUserByEmail]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
   })
@@ -214,7 +210,6 @@ describe('UserService [createUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 400,
       code: 'INVALID_USER_DATA'
     })
     expect(passwordHasher.hash).not.toHaveBeenCalled()
@@ -238,7 +233,6 @@ describe('UserService [createUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 409,
       code: 'EMAIL_ALREADY_EXISTS'
     })
   })
@@ -260,7 +254,6 @@ describe('UserService [createUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 409,
       code: 'USERNAME_ALREADY_EXISTS'
     })
   })
@@ -282,7 +275,6 @@ describe('UserService [createUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 400,
       code: 'INVALID_USER_DATA'
     })
   })
@@ -302,7 +294,6 @@ describe('UserService [createUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -358,7 +349,6 @@ describe('UserService [updateUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 400,
       code: 'NO_USER_FIELDS_TO_UPDATE'
     })
     expect(userRepository.updateUser).not.toHaveBeenCalled()
@@ -375,7 +365,6 @@ describe('UserService [updateUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
   })
@@ -395,7 +384,6 @@ describe('UserService [updateUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 409,
       code: 'EMAIL_ALREADY_EXISTS'
     })
   })
@@ -413,7 +401,6 @@ describe('UserService [updateUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -454,7 +441,6 @@ describe('UserService [deactivateUser]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -508,7 +494,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
     expect(passwordHasher.compare).not.toHaveBeenCalled()
@@ -530,7 +515,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 401,
       code: 'INVALID_CURRENT_PASSWORD'
     })
     expect(passwordHasher.hash).not.toHaveBeenCalled()
@@ -551,7 +535,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 400,
       code: 'PASSWORD_REUSE_NOT_ALLOWED'
     })
     expect(passwordHasher.hash).not.toHaveBeenCalled()
@@ -574,7 +557,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 404,
       code: 'USER_NOT_FOUND'
     })
   })
@@ -594,7 +576,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })
@@ -617,7 +598,6 @@ describe('UserService [changePassword]', () => {
 
     // Assert
     await expectAppError(userPromise, {
-      statusCode: 500,
       code: 'INTERNAL_ERROR'
     })
   })

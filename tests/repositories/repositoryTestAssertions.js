@@ -3,7 +3,7 @@ import { expect } from 'vitest'
 /**
  * Repository failures describe persistence problems only. They deliberately do
  * not contain an HTTP status; mapping one of these errors to 400/409/500 is the
- * responsibility of the application/service layer.
+ * responsibility of the controller or other transport layer.
  */
 export async function expectRepositoryError(promise, expected) {
   const error = await promise.then(

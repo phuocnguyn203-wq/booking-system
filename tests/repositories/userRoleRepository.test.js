@@ -84,7 +84,23 @@ describe('UserRoleRepository [findUserRoleByUserId]', () => {
     expect(roleIds).toEqual([])
   })
 
+  it('rejects with a data access error when the database query fails', async () => {
+    // Arrange
+    const databaseError = new Error('Database unavailable')
+    const failingQuery = async () => {
+      throw databaseError
+    }
+    const userRoleRepository = new UserRoleRepository(failingQuery)
 
+    // Act
+    const rolesPromise = userRoleRepository.findUserRoleByUserId(1)
+
+    // Assert
+    await expectRepositoryError(rolesPromise, {
+      code: 'DATA_ACCESS_ERROR',
+      cause: databaseError
+    })
+  })
 })
 
 describe('UserRoleRepository [addUserRole]', () => {
