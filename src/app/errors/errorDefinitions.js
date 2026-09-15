@@ -15,6 +15,10 @@ const Errors = {
     code: 'FORBIDDEN',
     message: 'You do not have permission to perform this action'
   },
+  VALIDATION_ERROR: {
+    code: 'VALIDATION_ERROR',
+    message: 'Request validation failed'
+  },
   INVALID_CREDENTIALS: {
     code: 'INVALID_CREDENTIALS',
     message: 'Username or password is incorrect'
