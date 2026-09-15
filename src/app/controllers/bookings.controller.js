@@ -10,7 +10,7 @@ export default class BookingsController {
 
   async getBookingById(req, res, next) {
     try {
-      const bookingId = Number(req.params.bookingId)
+      const { bookingId } = req.validated.params
       const booking = await this.bookingService.getBookingById(bookingId)
 
       return res.status(200).json({ data: booking })
@@ -21,7 +21,13 @@ export default class BookingsController {
 
   async createBooking(req, res, next) {
     try {
-      const booking = await this.bookingService.createBooking(req.body)
+      // Ownership comes from the verified token so a caller cannot create a
+      // booking on behalf of another user by changing the request body.
+      const bookingInfo = {
+        ...req.validated.body,
+        userId: req.user.id
+      }
+      const booking = await this.bookingService.createBooking(bookingInfo)
 
       return res.status(201).json({ data: booking })
     } catch (error) {
@@ -31,10 +37,10 @@ export default class BookingsController {
 
   async updateBooking(req, res, next) {
     try {
-      const bookingId = Number(req.params.bookingId)
+      const { bookingId } = req.validated.params
       const booking = await this.bookingService.updateBooking(
         bookingId,
-        req.body
+        req.validated.body
       )
 
       return res.status(200).json({ data: booking })
@@ -45,7 +51,7 @@ export default class BookingsController {
 
   async deactivateBooking(req, res, next) {
     try {
-      const bookingId = Number(req.params.bookingId)
+      const { bookingId } = req.validated.params
       await this.bookingService.deactivateBooking(bookingId)
 
       return res.status(204).send()

@@ -8,7 +8,7 @@ export default class PaymentsController {
 
   async getPaymentById(req, res, next) {
     try {
-      const paymentId = Number(req.params.paymentId)
+      const { paymentId } = req.validated.params
       const payment = await this.paymentService.getPaymentById(paymentId)
 
       return res.status(200).json({ data: payment })
@@ -19,7 +19,9 @@ export default class PaymentsController {
 
   async createPayment(req, res, next) {
     try {
-      const payment = await this.paymentService.createPayment(req.body)
+      const payment = await this.paymentService.createPayment(
+        req.validated.body
+      )
 
       return res.status(201).json({ data: payment })
     } catch (error) {

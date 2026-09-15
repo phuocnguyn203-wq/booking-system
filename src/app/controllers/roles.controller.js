@@ -10,7 +10,7 @@ export default class RolesController {
 
   async getRoleById(req, res, next) {
     try {
-      const roleId = Number(req.params.roleId)
+      const { roleId } = req.validated.params
       const role = await this.roleService.getRoleById(roleId)
 
       return res.status(200).json({ data: role })
@@ -21,7 +21,7 @@ export default class RolesController {
 
   async createRole(req, res, next) {
     try {
-      const role = await this.roleService.createRole(req.body)
+      const role = await this.roleService.createRole(req.validated.body)
 
       return res.status(201).json({ data: role })
     } catch (error) {
@@ -31,8 +31,11 @@ export default class RolesController {
 
   async updateRole(req, res, next) {
     try {
-      const roleId = Number(req.params.roleId)
-      const role = await this.roleService.updateRole(roleId, req.body)
+      const { roleId } = req.validated.params
+      const role = await this.roleService.updateRole(
+        roleId,
+        req.validated.body
+      )
 
       return res.status(200).json({ data: role })
     } catch (error) {
@@ -42,7 +45,7 @@ export default class RolesController {
 
   async deactivateRole(req, res, next) {
     try {
-      const roleId = Number(req.params.roleId)
+      const { roleId } = req.validated.params
       const role = await this.roleService.deactivateRole(roleId)
 
       return res.status(200).json({ data: role })

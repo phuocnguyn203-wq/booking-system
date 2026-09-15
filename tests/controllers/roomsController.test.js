@@ -41,7 +41,7 @@ beforeEach(() => {
 describe('RoomsController [getRoomById]', () => {
   it('returns an existing room with status 200', async () => {
     // Arrange
-    const req = { params: { roomId: String(room.id) } }
+    const req = { validated: { params: { roomId: room.id } } }
     roomService.getRoomById.mockResolvedValue(room)
 
     // Act
@@ -64,7 +64,7 @@ describe('RoomsController [createRoom]', () => {
       floor: room.floor,
       status: room.status
     }
-    const req = { body: roomInfo }
+    const req = { validated: { body: roomInfo } }
     roomService.createRoom.mockResolvedValue(room)
 
     // Act
@@ -87,8 +87,10 @@ describe('RoomsController [updateRoom]', () => {
     }
     const updatedRoom = { ...room, ...updateInfo }
     const req = {
-      params: { roomId: String(room.id) },
-      body: updateInfo
+      validated: {
+        params: { roomId: room.id },
+        body: updateInfo
+      }
     }
     roomService.updateRoom.mockResolvedValue(updatedRoom)
 
@@ -111,7 +113,7 @@ describe('RoomsController [deactivateRoom]', () => {
     'returns status 204 when the service returns %s',
     async deactivated => {
       // Arrange
-      const req = { params: { roomId: String(room.id) } }
+      const req = { validated: { params: { roomId: room.id } } }
       roomService.deactivateRoom.mockResolvedValue(deactivated)
 
       // Act
@@ -131,16 +133,18 @@ describe.each([
   {
     controllerMethod: 'getRoomById',
     serviceMethod: 'getRoomById',
-    req: () => ({ params: { roomId: String(room.id) } })
+    req: () => ({ validated: { params: { roomId: room.id } } })
   },
   {
     controllerMethod: 'createRoom',
     serviceMethod: 'createRoom',
     req: () => ({
-      body: {
-        roomNumber: room.roomNumber,
-        roomTypeId: room.roomTypeId,
-        status: room.status
+      validated: {
+        body: {
+          roomNumber: room.roomNumber,
+          roomTypeId: room.roomTypeId,
+          status: room.status
+        }
       }
     })
   },
@@ -148,14 +152,16 @@ describe.each([
     controllerMethod: 'updateRoom',
     serviceMethod: 'updateRoom',
     req: () => ({
-      params: { roomId: String(room.id) },
-      body: { status: 'maintenance' }
+      validated: {
+        params: { roomId: room.id },
+        body: { status: 'maintenance' }
+      }
     })
   },
   {
     controllerMethod: 'deactivateRoom',
     serviceMethod: 'deactivateRoom',
-    req: () => ({ params: { roomId: String(room.id) } })
+    req: () => ({ validated: { params: { roomId: room.id } } })
   }
 ])(
   'RoomsController [$controllerMethod error handling]',

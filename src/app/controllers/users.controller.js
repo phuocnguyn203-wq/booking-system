@@ -11,7 +11,7 @@ export default class UsersController {
 
   async getUserById(req, res, next) {
     try {
-      const userId = Number(req.params.userId)
+      const { userId } = req.validated.params
       const user = await this.userService.getUserById(userId)
 
       return res.status(200).json({ data: user })
@@ -22,7 +22,7 @@ export default class UsersController {
 
   async createUser(req, res, next) {
     try {
-      const user = await this.userService.createUser(req.body)
+      const user = await this.userService.createUser(req.validated.body)
 
       return res.status(201).json({ data: user })
     } catch (error) {
@@ -32,8 +32,11 @@ export default class UsersController {
 
   async updateUser(req, res, next) {
     try {
-      const userId = Number(req.params.userId)
-      const user = await this.userService.updateUser(userId, req.body)
+      const { userId } = req.validated.params
+      const user = await this.userService.updateUser(
+        userId,
+        req.validated.body
+      )
 
       return res.status(200).json({ data: user })
     } catch (error) {
@@ -43,7 +46,7 @@ export default class UsersController {
 
   async deactivateUser(req, res, next) {
     try {
-      const userId = Number(req.params.userId)
+      const { userId } = req.validated.params
       await this.userService.deactivateUser(userId)
 
       return res.status(204).send()
@@ -54,8 +57,8 @@ export default class UsersController {
 
   async changePassword(req, res, next) {
     try {
-      const userId = Number(req.params.userId)
-      const { currentPassword, newPassword } = req.body ?? {}
+      const { userId } = req.validated.params
+      const { currentPassword, newPassword } = req.validated.body
       const user = await this.userService.changePassword(
         userId,
         currentPassword,

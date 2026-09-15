@@ -41,7 +41,7 @@ beforeEach(() => {
 describe('BookingsController [getBookingById]', () => {
   it('returns an existing booking with status 200', async () => {
     // Arrange
-    const req = { params: { bookingId: String(booking.id) } }
+    const req = { validated: { params: { bookingId: booking.id } } }
     bookingService.getBookingById.mockResolvedValue(booking)
 
     // Act
@@ -60,13 +60,19 @@ describe('BookingsController [getBookingById]', () => {
 describe('BookingsController [createBooking]', () => {
   it('creates a booking and returns it with status 201', async () => {
     // Arrange
-    const bookingInfo = {
-      userId: booking.userId,
+    const bookingInput = {
       roomId: booking.roomId,
       checkInDate: booking.checkInDate,
       checkOutDate: booking.checkOutDate
     }
-    const req = { body: bookingInfo }
+    const bookingInfo = {
+      ...bookingInput,
+      userId: booking.userId
+    }
+    const req = {
+      user: { id: booking.userId },
+      validated: { body: bookingInput }
+    }
     bookingService.createBooking.mockResolvedValue(booking)
 
     // Act
@@ -91,8 +97,10 @@ describe('BookingsController [updateBooking]', () => {
     }
     const updatedBooking = { ...booking, ...updateInfo }
     const req = {
-      params: { bookingId: String(booking.id) },
-      body: updateInfo
+      validated: {
+        params: { bookingId: booking.id },
+        body: updateInfo
+      }
     }
     bookingService.updateBooking.mockResolvedValue(updatedBooking)
 
@@ -115,7 +123,7 @@ describe('BookingsController [deactivateBooking]', () => {
     'returns status 204 when the service returns %s',
     async deactivated => {
       // Arrange
-      const req = { params: { bookingId: String(booking.id) } }
+      const req = { validated: { params: { bookingId: booking.id } } }
       bookingService.deactivateBooking.mockResolvedValue(deactivated)
 
       // Act
@@ -137,17 +145,19 @@ describe.each([
   {
     controllerMethod: 'getBookingById',
     serviceMethod: 'getBookingById',
-    req: () => ({ params: { bookingId: String(booking.id) } })
+    req: () => ({ validated: { params: { bookingId: booking.id } } })
   },
   {
     controllerMethod: 'createBooking',
     serviceMethod: 'createBooking',
     req: () => ({
-      body: {
-        userId: booking.userId,
-        roomId: booking.roomId,
-        checkInDate: booking.checkInDate,
-        checkOutDate: booking.checkOutDate
+      user: { id: booking.userId },
+      validated: {
+        body: {
+          roomId: booking.roomId,
+          checkInDate: booking.checkInDate,
+          checkOutDate: booking.checkOutDate
+        }
       }
     })
   },
@@ -155,14 +165,16 @@ describe.each([
     controllerMethod: 'updateBooking',
     serviceMethod: 'updateBooking',
     req: () => ({
-      params: { bookingId: String(booking.id) },
-      body: { status: 'confirmed' }
+      validated: {
+        params: { bookingId: booking.id },
+        body: { status: 'confirmed' }
+      }
     })
   },
   {
     controllerMethod: 'deactivateBooking',
     serviceMethod: 'deactivateBooking',
-    req: () => ({ params: { bookingId: String(booking.id) } })
+    req: () => ({ validated: { params: { bookingId: booking.id } } })
   }
 ])(
   'BookingsController [$controllerMethod error handling]',

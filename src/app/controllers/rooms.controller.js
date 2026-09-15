@@ -10,7 +10,7 @@ export default class RoomsController {
 
   async getRoomById(req, res, next) {
     try {
-      const roomId = Number(req.params.roomId)
+      const { roomId } = req.validated.params
       const room = await this.roomService.getRoomById(roomId)
 
       return res.status(200).json({ data: room })
@@ -21,7 +21,7 @@ export default class RoomsController {
 
   async createRoom(req, res, next) {
     try {
-      const room = await this.roomService.createRoom(req.body)
+      const room = await this.roomService.createRoom(req.validated.body)
 
       return res.status(201).json({ data: room })
     } catch (error) {
@@ -31,8 +31,11 @@ export default class RoomsController {
 
   async updateRoom(req, res, next) {
     try {
-      const roomId = Number(req.params.roomId)
-      const room = await this.roomService.updateRoom(roomId, req.body)
+      const { roomId } = req.validated.params
+      const room = await this.roomService.updateRoom(
+        roomId,
+        req.validated.body
+      )
 
       return res.status(200).json({ data: room })
     } catch (error) {
@@ -42,7 +45,7 @@ export default class RoomsController {
 
   async deactivateRoom(req, res, next) {
     try {
-      const roomId = Number(req.params.roomId)
+      const { roomId } = req.validated.params
       await this.roomService.deactivateRoom(roomId)
 
       return res.status(204).send()

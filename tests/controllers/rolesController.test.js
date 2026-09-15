@@ -40,7 +40,7 @@ beforeEach(() => {
 describe('RolesController [getRoleById]', () => {
   it('returns an existing role with status 200', async () => {
     // Arrange
-    const req = { params: { roleId: String(activeRole.id) } }
+    const req = { validated: { params: { roleId: activeRole.id } } }
     roleService.getRoleById.mockResolvedValue(activeRole)
 
     // Act
@@ -62,7 +62,7 @@ describe('RolesController [createRole]', () => {
       name: activeRole.name,
       description: activeRole.description
     }
-    const req = { body: roleInfo }
+    const req = { validated: { body: roleInfo } }
     roleService.createRole.mockResolvedValue(activeRole)
 
     // Act
@@ -85,8 +85,10 @@ describe('RolesController [updateRole]', () => {
     }
     const updatedRole = { ...activeRole, ...updateInfo }
     const req = {
-      params: { roleId: String(activeRole.id) },
-      body: updateInfo
+      validated: {
+        params: { roleId: activeRole.id },
+        body: updateInfo
+      }
     }
     roleService.updateRole.mockResolvedValue(updatedRole)
 
@@ -108,7 +110,7 @@ describe('RolesController [deactivateRole]', () => {
   it('deactivates a role and returns it with status 200', async () => {
     // Arrange
     const inactiveRole = { ...activeRole, isActive: false }
-    const req = { params: { roleId: String(activeRole.id) } }
+    const req = { validated: { params: { roleId: activeRole.id } } }
     roleService.deactivateRole.mockResolvedValue(inactiveRole)
 
     // Act
@@ -128,15 +130,17 @@ describe.each([
   {
     controllerMethod: 'getRoleById',
     serviceMethod: 'getRoleById',
-    req: () => ({ params: { roleId: String(activeRole.id) } })
+    req: () => ({ validated: { params: { roleId: activeRole.id } } })
   },
   {
     controllerMethod: 'createRole',
     serviceMethod: 'createRole',
     req: () => ({
-      body: {
-        code: activeRole.code,
-        name: activeRole.name
+      validated: {
+        body: {
+          code: activeRole.code,
+          name: activeRole.name
+        }
       }
     })
   },
@@ -144,14 +148,16 @@ describe.each([
     controllerMethod: 'updateRole',
     serviceMethod: 'updateRole',
     req: () => ({
-      params: { roleId: String(activeRole.id) },
-      body: { name: 'Booking manager' }
+      validated: {
+        params: { roleId: activeRole.id },
+        body: { name: 'Booking manager' }
+      }
     })
   },
   {
     controllerMethod: 'deactivateRole',
     serviceMethod: 'deactivateRole',
-    req: () => ({ params: { roleId: String(activeRole.id) } })
+    req: () => ({ validated: { params: { roleId: activeRole.id } } })
   }
 ])(
   'RolesController [$controllerMethod error handling]',

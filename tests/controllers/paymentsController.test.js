@@ -47,7 +47,7 @@ beforeEach(() => {
 describe('PaymentsController [getPaymentById]', () => {
   it('returns an existing payment with status 200', async () => {
     // Arrange
-    const req = { params: { paymentId: String(payment.id) } }
+    const req = { validated: { params: { paymentId: payment.id } } }
     paymentService.getPaymentById.mockResolvedValue(payment)
 
     // Act
@@ -75,7 +75,7 @@ describe('PaymentsController [createPayment]', () => {
       providerTransactionId: payment.providerTransactionId,
       idempotencyKey: payment.idempotencyKey
     }
-    const req = { body: paymentInfo }
+    const req = { validated: { body: paymentInfo } }
     paymentService.createPayment.mockResolvedValue(payment)
 
     // Act
@@ -95,18 +95,20 @@ describe.each([
   {
     controllerMethod: 'getPaymentById',
     serviceMethod: 'getPaymentById',
-    req: () => ({ params: { paymentId: String(payment.id) } }),
+    req: () => ({ validated: { params: { paymentId: payment.id } } }),
     error: () => new AppError('Payment does not exist', 'PAYMENT_NOT_FOUND')
   },
   {
     controllerMethod: 'createPayment',
     serviceMethod: 'createPayment',
     req: () => ({
-      body: {
-        bookingId: payment.bookingId,
-        amount: payment.amount,
-        method: payment.method,
-        idempotencyKey: payment.idempotencyKey
+      validated: {
+        body: {
+          bookingId: payment.bookingId,
+          amount: payment.amount,
+          method: payment.method,
+          idempotencyKey: payment.idempotencyKey
+        }
       }
     }),
     error: () => new AppError(

@@ -44,7 +44,7 @@ beforeEach(() => {
 describe('UsersController [getUserById]', () => {
   it('returns an existing user with status 200', async () => {
     // Arrange
-    const req = { params: { userId: String(user.id) } }
+    const req = { validated: { params: { userId: user.id } } }
     userService.getUserById.mockResolvedValue(user)
 
     // Act
@@ -68,7 +68,7 @@ describe('UsersController [createUser]', () => {
       phone: user.phone,
       password: 'StrongPassword123!'
     }
-    const req = { body: userInfo }
+    const req = { validated: { body: userInfo } }
     userService.createUser.mockResolvedValue(user)
 
     // Act
@@ -91,8 +91,10 @@ describe('UsersController [updateUser]', () => {
     }
     const updatedUser = { ...user, ...updateInfo }
     const req = {
-      params: { userId: String(user.id) },
-      body: updateInfo
+      validated: {
+        params: { userId: user.id },
+        body: updateInfo
+      }
     }
     userService.updateUser.mockResolvedValue(updatedUser)
 
@@ -115,7 +117,7 @@ describe('UsersController [deactivateUser]', () => {
     'returns status 204 when the service returns %s',
     async deactivated => {
       // Arrange
-      const req = { params: { userId: String(user.id) } }
+      const req = { validated: { params: { userId: user.id } } }
       userService.deactivateUser.mockResolvedValue(deactivated)
 
       // Act
@@ -136,12 +138,13 @@ describe('UsersController [changePassword]', () => {
     // Arrange
     const passwordInfo = {
       currentPassword: 'CurrentPassword123!',
-      newPassword: 'NewPassword456!',
-      ignoredField: 'ignored'
+      newPassword: 'NewPassword456!'
     }
     const req = {
-      params: { userId: String(user.id) },
-      body: passwordInfo
+      validated: {
+        params: { userId: user.id },
+        body: passwordInfo
+      }
     }
     userService.changePassword.mockResolvedValue(user)
 
@@ -164,34 +167,40 @@ describe.each([
   {
     controllerMethod: 'getUserById',
     serviceMethod: 'getUserById',
-    req: () => ({ params: { userId: String(user.id) } })
+    req: () => ({ validated: { params: { userId: user.id } } })
   },
   {
     controllerMethod: 'createUser',
     serviceMethod: 'createUser',
-    req: () => ({ body: { email: user.email, password: 'password' } })
+    req: () => ({
+      validated: { body: { email: user.email, password: 'password' } }
+    })
   },
   {
     controllerMethod: 'updateUser',
     serviceMethod: 'updateUser',
     req: () => ({
-      params: { userId: String(user.id) },
-      body: { fullname: 'Updated User' }
+      validated: {
+        params: { userId: user.id },
+        body: { fullname: 'Updated User' }
+      }
     })
   },
   {
     controllerMethod: 'deactivateUser',
     serviceMethod: 'deactivateUser',
-    req: () => ({ params: { userId: String(user.id) } })
+    req: () => ({ validated: { params: { userId: user.id } } })
   },
   {
     controllerMethod: 'changePassword',
     serviceMethod: 'changePassword',
     req: () => ({
-      params: { userId: String(user.id) },
-      body: {
-        currentPassword: 'CurrentPassword123!',
-        newPassword: 'NewPassword456!'
+      validated: {
+        params: { userId: user.id },
+        body: {
+          currentPassword: 'CurrentPassword123!',
+          newPassword: 'NewPassword456!'
+        }
       }
     })
   }
