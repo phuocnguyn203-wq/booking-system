@@ -103,6 +103,66 @@ describe('UserRoleRepository [findUserRoleByUserId]', () => {
   })
 })
 
+describe('UserRoleRepository [findActiveRoleCodesByUserId]', () => {
+  it('returns active role codes assigned to a user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser()
+    const activeRole = await createTestRole({ code: 'CUSTOMER' })
+    const inactiveRole = await createTestRole({
+      code: 'INACTIVE_ROLE',
+      isActive: false
+    })
+    await createTestUserRoleWrapper({
+      userId: testUser.id,
+      roleIds: [activeRole.id, inactiveRole.id]
+    })
+
+    // Act
+    const roleCodes = await userRoleRepository.findActiveRoleCodesByUserId(
+      testUser.id
+    )
+
+    // Assert
+    expect(roleCodes).toEqual(['CUSTOMER'])
+  })
+
+  it('returns an empty list for a deleted user', async ({ userRoleRepository }) => {
+    // Arrange
+    const testUser = await createTestUser({ isDeleted: true })
+    const activeRole = await createTestRole({ code: 'CUSTOMER' })
+    await createTestUserRoleWrapper({
+      userId: testUser.id,
+      roleIds: [activeRole.id]
+    })
+
+    // Act
+    const roleCodes = await userRoleRepository.findActiveRoleCodesByUserId(
+      testUser.id
+    )
+
+    // Assert
+    expect(roleCodes).toEqual([])
+  })
+
+  it('rejects with a data access error when the database query fails', async () => {
+    // Arrange
+    const databaseError = new Error('Database unavailable')
+    const failingQuery = async () => {
+      throw databaseError
+    }
+    const userRoleRepository = new UserRoleRepository(failingQuery)
+
+    // Act
+    const rolesPromise = userRoleRepository.findActiveRoleCodesByUserId(1)
+
+    // Assert
+    await expectRepositoryError(rolesPromise, {
+      code: 'DATA_ACCESS_ERROR',
+      cause: databaseError
+    })
+  })
+})
+
 describe('UserRoleRepository [addUserRole]', () => {
   // User status, soft deletion, and role activity are application policies.
   // The service evaluates them using UserRepository and RoleRepository before

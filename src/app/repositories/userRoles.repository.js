@@ -26,6 +26,26 @@ export default class UserRoleRepository{
     }
   }
 
+  async findActiveRoleCodesByUserId(userId) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT r.code
+        FROM user_roles ur
+        JOIN users u ON ur.user_id=u.id
+        JOIN roles r ON ur.role_id=r.id
+        WHERE u.id=$1 AND u.is_deleted=false AND r.is_active=true
+        ORDER BY r.code;
+        `,
+        [userId]
+      )
+
+      return rowResult.rows.map(row => row.code)
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
+  }
+
   async addUserRole(userId, roleId) {
     try {
       const rowResult = await this.query(

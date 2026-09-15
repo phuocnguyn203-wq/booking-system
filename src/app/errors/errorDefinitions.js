@@ -15,6 +15,14 @@ const Errors = {
     code: 'FORBIDDEN',
     message: 'You do not have permission to perform this action'
   },
+  INVALID_CREDENTIALS: {
+    code: 'INVALID_CREDENTIALS',
+    message: 'Username or password is incorrect'
+  },
+  ACCOUNT_NOT_ACTIVE: {
+    code: 'ACCOUNT_NOT_ACTIVE',
+    message: 'User account is not active'
+  },
   USER_NOT_FOUND: {
     code: 'USER_NOT_FOUND',
     message: 'User does not exist'
