@@ -3,6 +3,14 @@ const Errors = {
     code: 'INTERNAL_ERROR',
     message: 'Internal error'
   },
+  AUTHENTICATION_REQUIRED: {
+    code: 'AUTHENTICATION_REQUIRED',
+    message: 'Bearer access token is required'
+  },
+  INVALID_ACCESS_TOKEN: {
+    code: 'INVALID_ACCESS_TOKEN',
+    message: 'Access token is invalid or expired'
+  },
   USER_NOT_FOUND: {
     code: 'USER_NOT_FOUND',
     message: 'User does not exist'
