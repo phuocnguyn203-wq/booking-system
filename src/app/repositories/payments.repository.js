@@ -93,6 +93,126 @@ export default class PaymentRepository {
     }
   }
 
+  async findByUserId(userId, { limit, offset }) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT p.*, COUNT(*) OVER() AS total_count
+        FROM payments p
+        JOIN bookings b ON b.id = p.booking_id
+        WHERE b.user_id=$1 AND b.is_deleted=false
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT $2 OFFSET $3;
+        `,
+        [userId, limit, offset]
+      )
+
+      let total = rowResult.rows.length === 0
+        ? null
+        : Number(rowResult.rows[0].total_count)
+
+      if (total === null) {
+        const countResult = await this.query(
+          `
+          SELECT COUNT(*) AS total_count
+          FROM payments p
+          JOIN bookings b ON b.id = p.booking_id
+          WHERE b.user_id=$1 AND b.is_deleted=false;
+          `,
+          [userId]
+        )
+        total = Number(countResult.rows[0].total_count)
+      }
+
+      return {
+        total,
+        items: rowResult.rows.map(mapRowToPayment)
+      }
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
+  async findByIdForUser(id, userId) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT p.*
+        FROM payments p
+        JOIN bookings b ON b.id = p.booking_id
+        WHERE p.id=$1 AND b.user_id=$2 AND b.is_deleted=false;
+        `,
+        [id, userId]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToPayment(rowResult.rows[0])
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
+  async createForUser(userId, paymentInfo) {
+    const {
+      bookingId,
+      method,
+      provider,
+      providerTransactionId,
+      idempotencyKey
+    } = paymentInfo ?? {}
+
+    try {
+      const rowResult = await this.query(
+        `
+        INSERT INTO payments (
+          booking_id,
+          amount,
+          currency,
+          method,
+          provider,
+          provider_transaction_id,
+          idempotency_key
+        )
+        SELECT
+          b.id,
+          rt.price_per_night * (b.check_out - b.check_in),
+          'VND',
+          $3,
+          $4,
+          $5,
+          $6
+        FROM bookings b
+        JOIN rooms r ON r.id = b.room_id
+        JOIN room_types rt ON rt.id = r.room_type_id
+        WHERE b.id=$1
+          AND b.user_id=$2
+          AND b.is_deleted=false
+          AND b.status IN ('pending', 'confirmed')
+          AND r.is_deleted=false
+          AND rt.is_deleted=false
+        RETURNING *;
+        `,
+        [
+          bookingId,
+          userId,
+          method,
+          provider,
+          providerTransactionId,
+          idempotencyKey
+        ]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToPayment(rowResult.rows[0])
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
   async createPayment(paymentInfo) {
     const {
       bookingId,

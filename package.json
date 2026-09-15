@@ -7,10 +7,13 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node src/main.js",
+    "dev": "node --watch src/main.js",
     "test": "vitest run --no-file-parallelism",
     "migrate": "node-pg-migrate --migrations-dir src/database/migrations"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",

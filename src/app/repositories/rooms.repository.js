@@ -10,6 +10,20 @@ function mapRowToRoom(row) {
     isDeleted: row.is_deleted,
   };
 }
+
+function mapRowToAvailableRoom(row) {
+  return {
+    ...mapRowToRoom(row),
+    roomType: {
+      id: Number(row.room_type_id),
+      code: row.room_type_code,
+      name: row.room_type_name,
+      description: row.room_type_description,
+      capacity: Number(row.room_type_capacity),
+      pricePerNight: row.price_per_night
+    }
+  }
+}
 export default class RoomRepository {
   constructor(query) {
     this.query = query;
@@ -33,6 +47,97 @@ export default class RoomRepository {
       throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
     }
     
+  }
+
+  async findAvailable({
+    checkInDate = null,
+    checkOutDate = null,
+    capacity = null,
+    limit,
+    offset
+  }) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT
+          r.id,
+          r.room_number,
+          r.room_type_id,
+          r.floor,
+          r.status,
+          r.is_deleted,
+          rt.code AS room_type_code,
+          rt.name AS room_type_name,
+          rt.description AS room_type_description,
+          rt.capacity AS room_type_capacity,
+          rt.price_per_night,
+          COUNT(*) OVER() AS total_count
+        FROM rooms r
+        JOIN room_types rt ON rt.id = r.room_type_id
+        WHERE r.is_deleted=false
+          AND r.status='active'
+          AND rt.is_deleted=false
+          AND ($3::integer IS NULL OR rt.capacity >= $3)
+          AND (
+            $1::date IS NULL
+            OR NOT EXISTS (
+              SELECT 1
+              FROM bookings b
+              WHERE b.room_id = r.id
+                AND b.is_deleted=false
+                AND b.status IN ('pending', 'confirmed')
+                AND daterange(b.check_in, b.check_out, '[)')
+                  && daterange($1::date, $2::date, '[)')
+            )
+          )
+        ORDER BY rt.price_per_night, r.room_number
+        LIMIT $4 OFFSET $5;
+        `,
+        [checkInDate, checkOutDate, capacity, limit, offset]
+      )
+
+      let total = rowResult.rows.length === 0
+        ? null
+        : Number(rowResult.rows[0].total_count)
+
+      // A window count has no row to attach to when an offset is past the last
+      // page. Count only in that case so pagination metadata remains correct
+      // without adding a second query to ordinary page loads.
+      if (total === null) {
+        const countResult = await this.query(
+          `
+          SELECT COUNT(*) AS total_count
+          FROM rooms r
+          JOIN room_types rt ON rt.id = r.room_type_id
+          WHERE r.is_deleted=false
+            AND r.status='active'
+            AND rt.is_deleted=false
+            AND ($3::integer IS NULL OR rt.capacity >= $3)
+            AND (
+              $1::date IS NULL
+              OR NOT EXISTS (
+                SELECT 1
+                FROM bookings b
+                WHERE b.room_id = r.id
+                  AND b.is_deleted=false
+                  AND b.status IN ('pending', 'confirmed')
+                  AND daterange(b.check_in, b.check_out, '[)')
+                    && daterange($1::date, $2::date, '[)')
+              )
+            );
+          `,
+          [checkInDate, checkOutDate, capacity]
+        )
+        total = Number(countResult.rows[0].total_count)
+      }
+
+      return {
+        total,
+        items: rowResult.rows.map(mapRowToAvailableRoom)
+      }
+    } catch (error) {
+      throw new RepositoryError('DATA_ACCESS_ERROR', { cause: error })
+    }
   }
 
   async createRoom(roomInfo) {

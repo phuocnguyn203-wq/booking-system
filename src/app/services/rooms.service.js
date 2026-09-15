@@ -45,6 +45,28 @@ export default class RoomService {
     this.roomRepository = roomRepository
   }
 
+  async listAvailableRooms({
+    page,
+    limit,
+    checkInDate,
+    checkOutDate,
+    capacity
+  }) {
+    try {
+      const result = await this.roomRepository.findAvailable({
+        checkInDate,
+        checkOutDate,
+        capacity,
+        limit,
+        offset: (page - 1) * limit
+      })
+
+      return { ...result, page, limit }
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
   async getRoomById(roomId) {
     try {
       const room = await this.roomRepository.findById(roomId)

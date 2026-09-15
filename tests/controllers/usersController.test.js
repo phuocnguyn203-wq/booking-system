@@ -141,8 +141,8 @@ describe('UsersController [changePassword]', () => {
       newPassword: 'NewPassword456!'
     }
     const req = {
+      user: { id: user.id },
       validated: {
-        params: { userId: user.id },
         body: passwordInfo
       }
     }
@@ -195,8 +195,8 @@ describe.each([
     controllerMethod: 'changePassword',
     serviceMethod: 'changePassword',
     req: () => ({
+      user: { id: user.id },
       validated: {
-        params: { userId: user.id },
         body: {
           currentPassword: 'CurrentPassword123!',
           newPassword: 'NewPassword456!'

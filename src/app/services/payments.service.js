@@ -49,6 +49,51 @@ export default class PaymentService {
     this.paymentRepository = paymentRepository
   }
 
+  async listUserPayments(userId, { page, limit }) {
+    try {
+      const result = await this.paymentRepository.findByUserId(userId, {
+        limit,
+        offset: (page - 1) * limit
+      })
+
+      return { ...result, page, limit }
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
+  async getUserPaymentById(userId, paymentId) {
+    try {
+      const payment = await this.paymentRepository.findByIdForUser(
+        paymentId,
+        userId
+      )
+
+      if (payment === null)
+        throw createAppError(Errors.PAYMENT_NOT_FOUND)
+
+      return payment
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
+  async createUserPayment(userId, paymentInfo) {
+    try {
+      const payment = await this.paymentRepository.createForUser(
+        userId,
+        paymentInfo
+      )
+
+      if (payment === null)
+        throw createAppError(Errors.BOOKING_NOT_FOUND)
+
+      return payment
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
   async getPaymentById(paymentId) {
     try {
       const payment = await this.paymentRepository.findById(paymentId)

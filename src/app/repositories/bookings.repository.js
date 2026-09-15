@@ -78,6 +78,91 @@ export default class BookingRepository {
     }
   }
 
+  async findByUserId(userId, { limit, offset }) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT
+          id,
+          user_id,
+          room_id,
+          check_in,
+          check_out,
+          status,
+          COUNT(*) OVER() AS total_count
+        FROM bookings
+        WHERE user_id=$1 AND is_deleted=false
+        ORDER BY check_in DESC, id DESC
+        LIMIT $2 OFFSET $3;
+        `,
+        [userId, limit, offset]
+      )
+
+      let total = rowResult.rows.length === 0
+        ? null
+        : Number(rowResult.rows[0].total_count)
+
+      if (total === null) {
+        const countResult = await this.query(
+          `
+          SELECT COUNT(*) AS total_count
+          FROM bookings
+          WHERE user_id=$1 AND is_deleted=false;
+          `,
+          [userId]
+        )
+        total = Number(countResult.rows[0].total_count)
+      }
+
+      return {
+        total,
+        items: rowResult.rows.map(mapRowToBooking)
+      }
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
+  async findByIdForUser(id, userId) {
+    try {
+      const rowResult = await this.query(
+        `
+        SELECT id, user_id, room_id, check_in, check_out, status
+        FROM bookings
+        WHERE id=$1 AND user_id=$2 AND is_deleted=false;
+        `,
+        [id, userId]
+      )
+
+      if (rowResult.rows.length === 0)
+        return null
+
+      return mapRowToBooking(rowResult.rows[0])
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
+  async cancelByIdForUser(id, userId) {
+    try {
+      const rowResult = await this.query(
+        `
+        UPDATE bookings
+        SET status='cancelled'
+        WHERE id=$1
+          AND user_id=$2
+          AND is_deleted=false
+          AND status IN ('pending', 'confirmed');
+        `,
+        [id, userId]
+      )
+
+      return rowResult.rowCount > 0
+    } catch (error) {
+      throw mapDatabaseError(error)
+    }
+  }
+
   async createBooking(bookingInfo) {
     const {
       userId,

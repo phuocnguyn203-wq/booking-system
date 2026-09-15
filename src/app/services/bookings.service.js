@@ -52,6 +52,43 @@ export default class BookingService {
     this.bookingRepository = bookingRepository
   }
 
+  async listUserBookings(userId, { page, limit }) {
+    try {
+      const result = await this.bookingRepository.findByUserId(userId, {
+        limit,
+        offset: (page - 1) * limit
+      })
+
+      return { ...result, page, limit }
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
+  async getUserBookingById(userId, bookingId) {
+    try {
+      const booking = await this.bookingRepository.findByIdForUser(
+        bookingId,
+        userId
+      )
+
+      if (booking === null)
+        throw createAppError(Errors.BOOKING_NOT_FOUND)
+
+      return booking
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
+  async cancelUserBooking(userId, bookingId) {
+    try {
+      return await this.bookingRepository.cancelByIdForUser(bookingId, userId)
+    } catch (error) {
+      throwServiceError(error)
+    }
+  }
+
   async getBookingById(bookingId) {
     try {
       const booking = await this.bookingRepository.findById(bookingId)

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   createIdParamsSchema,
+  paginationQueryShape,
   positiveIdSchema
 } from './common.schemas.js'
 
@@ -27,7 +28,20 @@ const createPaymentBodySchema = z.object({
   idempotencyKey: z.string().trim().min(1).max(128)
 }).strict()
 
+const createCurrentPaymentBodySchema = z.object({
+  bookingId: positiveIdSchema,
+  method: z.enum(['cash', 'card', 'bank_transfer', 'e_wallet']),
+  provider: optionalProviderValue,
+  providerTransactionId: optionalProviderValue,
+  idempotencyKey: z.string().trim().min(1).max(128)
+}).strict()
+
+const paginationQuerySchema = z.object(paginationQueryShape).strict()
+
 export default Object.freeze({
+  listCurrent: Object.freeze({ query: paginationQuerySchema }),
+  getCurrentById: Object.freeze({ params: paymentIdParamsSchema }),
+  createCurrent: Object.freeze({ body: createCurrentPaymentBodySchema }),
   getById: Object.freeze({ params: paymentIdParamsSchema }),
   create: Object.freeze({ body: createPaymentBodySchema })
 })

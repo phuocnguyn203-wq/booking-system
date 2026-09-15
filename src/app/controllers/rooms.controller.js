@@ -2,10 +2,25 @@ export default class RoomsController {
   constructor({ roomService }) {
     this.roomService = roomService
 
+    this.listAvailableRooms = this.listAvailableRooms.bind(this)
     this.getRoomById = this.getRoomById.bind(this)
     this.createRoom = this.createRoom.bind(this)
     this.updateRoom = this.updateRoom.bind(this)
     this.deactivateRoom = this.deactivateRoom.bind(this)
+  }
+
+  async listAvailableRooms(req, res, next) {
+    try {
+      const { items, total, page, limit } =
+        await this.roomService.listAvailableRooms(req.validated.query)
+
+      return res.status(200).json({
+        data: items,
+        meta: { total, page, limit }
+      })
+    } catch (error) {
+      return next(error)
+    }
   }
 
   async getRoomById(req, res, next) {

@@ -22,6 +22,24 @@ describe('booking route schemas [params]', () => {
   })
 })
 
+describe('booking route schemas [current user list]', () => {
+  it('applies pagination defaults', async () => {
+    await expectValid(
+      bookingSchemas.listCurrent.query,
+      {},
+      { page: 1, limit: 20 }
+    )
+  })
+
+  it('coerces explicit pagination values', async () => {
+    await expectValid(
+      bookingSchemas.listCurrent.query,
+      { page: '2', limit: '10' },
+      { page: 2, limit: 10 }
+    )
+  })
+})
+
 describe('booking route schemas [create]', () => {
   it('accepts a valid booking period', async () => {
     await expectValid(bookingSchemas.create.body, validBooking)

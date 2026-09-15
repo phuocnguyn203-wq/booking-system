@@ -37,13 +37,13 @@ const changePasswordBodySchema = z.object({
 export default Object.freeze({
   getById: Object.freeze({ params: userIdParamsSchema }),
   create: Object.freeze({ body: createUserBodySchema }),
+  updateCurrent: Object.freeze({ body: updateUserBodySchema }),
   update: Object.freeze({
     params: userIdParamsSchema,
     body: updateUserBodySchema
   }),
   deactivate: Object.freeze({ params: userIdParamsSchema }),
   changePassword: Object.freeze({
-    params: userIdParamsSchema,
     body: changePasswordBodySchema
   })
 })

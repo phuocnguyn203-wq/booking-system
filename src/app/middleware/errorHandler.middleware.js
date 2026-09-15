@@ -3,6 +3,7 @@ import Errors from '../errors/errorDefinitions.js'
 
 const STATUS_BY_ERROR_CODE = Object.freeze({
   VALIDATION_ERROR: 400,
+  INVALID_JSON: 400,
   INVALID_BOOKING_DATA: 400,
   NO_BOOKING_FIELDS_TO_UPDATE: 400,
   INVALID_PAYMENT_DATA: 400,
@@ -29,6 +30,7 @@ const STATUS_BY_ERROR_CODE = Object.freeze({
   ROOM_TYPE_NOT_FOUND: 404,
   PAYMENT_NOT_FOUND: 404,
   BOOKING_NOT_FOUND: 404,
+  ROUTE_NOT_FOUND: 404,
 
   ROLE_ALREADY_ASSIGNED: 409,
   ROLE_CODE_ALREADY_EXISTS: 409,
@@ -60,6 +62,18 @@ export default function createErrorHandler({ logger = console } = {}) {
     // here can corrupt a streamed body or trigger a second-headers exception.
     if (res.headersSent)
       return next(error)
+
+    if (
+      error?.type === 'entity.parse.failed' &&
+      error instanceof SyntaxError
+    ) {
+      return res.status(400).json({
+        error: {
+          code: Errors.INVALID_JSON.code,
+          message: Errors.INVALID_JSON.message
+        }
+      })
+    }
 
     if (!(error instanceof AppError))
       return sendInternalError(error, res, logger)

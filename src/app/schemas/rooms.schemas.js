@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import {
   createIdParamsSchema,
+  dateOnlySchema,
+  paginationQueryShape,
   positiveIdSchema,
   requireAtLeastOneField
 } from './common.schemas.js'
@@ -28,7 +30,29 @@ const updateRoomBodySchema = requireAtLeastOneField(z.object({
   status: roomStatusSchema.optional()
 }).strict())
 
+const availableRoomsQuerySchema = z.object({
+  ...paginationQueryShape,
+  checkInDate: dateOnlySchema.optional(),
+  checkOutDate: dateOnlySchema.optional(),
+  capacity: z.coerce.number().int().positive().optional()
+}).strict().refine(value => {
+  return (value.checkInDate === undefined) ===
+    (value.checkOutDate === undefined)
+}, {
+  path: ['checkOutDate'],
+  message: 'Check-in and check-out dates must be provided together'
+}).refine(value => {
+  if (value.checkInDate === undefined)
+    return true
+
+  return value.checkOutDate > value.checkInDate
+}, {
+  path: ['checkOutDate'],
+  message: 'Check-out date must be after check-in date'
+})
+
 export default Object.freeze({
+  listAvailable: Object.freeze({ query: availableRoomsQuerySchema }),
   getById: Object.freeze({ params: roomIdParamsSchema }),
   create: Object.freeze({ body: createRoomBodySchema }),
   update: Object.freeze({

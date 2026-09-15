@@ -26,6 +26,36 @@ describe('payment route schemas [params]', () => {
   })
 })
 
+describe('payment route schemas [current user]', () => {
+  it('accepts payment intent without a caller-controlled amount', async () => {
+    const input = {
+      bookingId: 2,
+      method: 'card',
+      provider: 'stripe',
+      idempotencyKey: 'payment-request-1'
+    }
+
+    await expectValid(paymentSchemas.createCurrent.body, input)
+  })
+
+  it('rejects a caller-controlled amount', async () => {
+    await expectInvalid(paymentSchemas.createCurrent.body, {
+      bookingId: 2,
+      amount: '1.00',
+      method: 'card',
+      idempotencyKey: 'payment-request-1'
+    })
+  })
+
+  it('applies list pagination defaults', async () => {
+    await expectValid(
+      paymentSchemas.listCurrent.query,
+      {},
+      { page: 1, limit: 20 }
+    )
+  })
+})
+
 describe('payment route schemas [create]', () => {
   it('normalizes a valid payment request', async () => {
     await expectValid(

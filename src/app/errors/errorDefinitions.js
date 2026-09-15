@@ -19,6 +19,14 @@ const Errors = {
     code: 'VALIDATION_ERROR',
     message: 'Request validation failed'
   },
+  INVALID_JSON: {
+    code: 'INVALID_JSON',
+    message: 'Request body contains invalid JSON'
+  },
+  ROUTE_NOT_FOUND: {
+    code: 'ROUTE_NOT_FOUND',
+    message: 'Route does not exist'
+  },
   INVALID_CREDENTIALS: {
     code: 'INVALID_CREDENTIALS',
     message: 'Username or password is incorrect'

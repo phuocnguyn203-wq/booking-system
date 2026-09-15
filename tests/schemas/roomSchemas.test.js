@@ -23,6 +23,36 @@ describe('room route schemas [params]', () => {
   })
 })
 
+describe('room route schemas [availability query]', () => {
+  it('applies pagination defaults and coerces query values', async () => {
+    await expectValid(
+      roomSchemas.listAvailable.query,
+      {
+        checkInDate: '2030-01-10',
+        checkOutDate: '2030-01-12',
+        capacity: '2'
+      },
+      {
+        page: 1,
+        limit: 20,
+        checkInDate: '2030-01-10',
+        checkOutDate: '2030-01-12',
+        capacity: 2
+      }
+    )
+  })
+
+  it.each([
+    { checkInDate: '2030-01-10' },
+    { checkOutDate: '2030-01-12' },
+    { checkInDate: '2030-01-12', checkOutDate: '2030-01-10' },
+    { page: '0' },
+    { limit: '101' }
+  ])('rejects invalid availability query %j', async query => {
+    await expectInvalid(roomSchemas.listAvailable.query, query)
+  })
+})
+
 describe('room route schemas [create]', () => {
   it('normalizes a valid room', async () => {
     await expectValid(
