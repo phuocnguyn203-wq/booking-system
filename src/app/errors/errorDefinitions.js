@@ -11,6 +11,10 @@ const Errors = {
     code: 'INVALID_ACCESS_TOKEN',
     message: 'Access token is invalid or expired'
   },
+  FORBIDDEN: {
+    code: 'FORBIDDEN',
+    message: 'You do not have permission to perform this action'
+  },
   USER_NOT_FOUND: {
     code: 'USER_NOT_FOUND',
     message: 'User does not exist'
